@@ -1,0 +1,13 @@
+{
+  "timestamp_utc": "2026-01-06T12:01:09Z",
+  "cwd": "C:\\Users\\bobby\\python_test\\vv-project\\vv-app1-qra",
+  "project_root": "C:\\Users\\bobby\\python_test\\vv-project\\vv-app1-qra",
+  "python_version": "3.14.0",
+  "python_executable": "C:\\Users\\bobby\\python_test\\vv-project\\vv-app1-qra\\venv\\Scripts\\python.exe",
+  "pip_version": "25.3",
+  "is_venv": true,
+  "venv_prefix": "C:\\Users\\bobby\\python_test\\vv-project\\vv-app1-qra\\venv",
+  "os_name": "Windows",
+  "os_release": "11",
+  "platform": "Windows-11-10.0.26200-SP0"
+}

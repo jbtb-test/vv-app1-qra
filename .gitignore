@@ -14,6 +14,7 @@ htmlcov/
 
 # Env files
 .env
+.env.*
 
 # OS / IDE
 .DS_Store

@@ -24,3 +24,11 @@ Thumbs.db
 
 # Office temporary files
 .~lock.*#
+
+# vv_app1_qra.egg-info
+*.egg-info/
+dist/
+build/
+
+#output bruit
+data/outputs/*.tmp

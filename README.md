@@ -66,11 +66,11 @@ python -m src.main --input data/demo_input.csv --out-dir data
 ```
 
 **Entrée**
-- `data/demo_input.csv`
+- `data/inputs/demo_input.csv`
 
 **Sorties**
-- `data/demo_output.csv`
-- `data/demo_output.html`
+- `data/outputs/demo_output.csv`
+- `data/outputs/demo_output.html`
 
 Ouvrir `data/demo_output.html` dans un navigateur.
 

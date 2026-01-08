@@ -21,9 +21,11 @@ import csv
 from pathlib import Path
 
 import pytest
-
 from vv_app1_qra.main import ModuleError, process
 
+import csv
+from pathlib import Path
+from vv_app1_qra.main import process
 
 # ============================================================
 # 🔧 Fixtures
@@ -115,3 +117,43 @@ def test_process_nominal(sample_csv: Path, out_dir: Path):
 def test_process_error(invalid_input):
     with pytest.raises(ModuleError):
         process(invalid_input)
+
+def _read_csv_rows(p: Path):
+    with p.open("r", encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def test_cli_outputs_are_enriched_with_rules(tmp_path):
+    out = process(
+        {
+            "input_path": "data/inputs/demo_input.csv",
+            "out_dir": str(tmp_path),
+            "fail_on_empty": True,
+            "verbose": False,
+        }
+    )
+
+    assert out.ok is True
+    csv_path = Path(out.payload["output_csv"])
+    html_path = Path(out.payload["output_html"])
+    assert csv_path.exists()
+    assert html_path.exists()
+
+    rows = _read_csv_rows(csv_path)
+    assert len(rows) == 4
+
+    # Colonnes enrichies attendues
+    for col in ["status", "score", "issues_count", "suggestions_count", "issues_json", "suggestions_json"]:
+        assert col in rows[0]
+
+    # Vérification sémantique minimale
+    # REQ-001 (formulation "shall" + AC + VM) => typiquement 0 issue
+    r1 = next(r for r in rows if r["req_id"] == "REQ-001")
+    assert r1["status"] == "CHECKED"
+    assert int(r1["issues_count"]) == 0
+
+    # REQ-002 contient "should" + AC vide => doit générer des issues
+    r2 = next(r for r in rows if r["req_id"] == "REQ-002")
+    assert r2["status"] == "CHECKED"
+    assert int(r2["issues_count"]) >= 1
+    assert r2["score"] != ""  # score présent

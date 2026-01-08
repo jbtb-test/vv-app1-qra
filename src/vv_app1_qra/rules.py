@@ -94,6 +94,7 @@ AMBIGUOUS_TERMS: Tuple[str, ...] = (
     "secure",
     "as appropriate",
     "if necessary",
+    "if needed",
     "as needed",
     "etc",
     "sufficient",
@@ -102,6 +103,7 @@ AMBIGUOUS_TERMS: Tuple[str, ...] = (
     "minimize",
     "maximize",
 )
+
 
 WEAK_MODAL_VERBS: Tuple[str, ...] = (
     "should",

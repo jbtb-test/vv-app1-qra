@@ -52,6 +52,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import json
+from vv_app1_qra.models import AnalysisResult, Requirement
+from vv_app1_qra.rules import analyze_requirement
+
 
 # ============================================================
 # 🧾 Logging (local, autonome)
@@ -199,39 +203,79 @@ def load_requirements_csv(input_path: Path) -> List[Dict[str, str]]:
 
         return rows
 
+def _row_to_requirement(row: Dict[str, str]) -> Requirement:
+    """
+    Convertit une ligne normalisée (dict) en Requirement (modèle domaine 1.7).
+    Lève ValueError si invalide (contrat Requirement.__post_init__).
+    """
+    return Requirement(
+        req_id=row.get("req_id", ""),
+        title=row.get("title", ""),
+        text=row.get("text", ""),
+        source=row.get("source", "demo"),
+        system=row.get("system", ""),
+        component=row.get("component", ""),
+        priority=row.get("priority", ""),
+        rationale=row.get("rationale", ""),
+        verification_method=row.get("verification_method", ""),
+        acceptance_criteria=row.get("acceptance_criteria", ""),
+        meta={},  # réservé (extensions futures)
+    )
 
-def write_output_csv(out_path: Path, requirements: List[Dict[str, str]]) -> None:
+
+def write_output_csv(out_path: Path, analyses: List[AnalysisResult]) -> None:
+    """
+    Écrit un CSV enrichi (1.8.2) :
+      - status/score
+      - issues_count/suggestions_count
+      - issues_json/suggestions_json (compact JSON)
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = [
+        "req_id",
+        "title",
+        "text",
+        "source",
+        "system",
+        "component",
+        "priority",
+        "verification_method",
+        "acceptance_criteria",
+        "status",
+        "score",
+        "issues_count",
+        "suggestions_count",
+        "issues_json",
+        "suggestions_json",
+    ]
+
     with out_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "req_id",
-                "title",
-                "text",
-                "source",
-                "system",
-                "component",
-                "priority",
-                "verification_method",
-                "acceptance_criteria",
-                "status",
-            ],
-        )
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        for r in requirements:
+
+        for a in analyses:
+            req = a.requirement
+            issues_json = json.dumps([i.to_dict() for i in a.issues], ensure_ascii=False, separators=(",", ":"))
+            suggs_json = json.dumps([s.to_dict() for s in a.suggestions], ensure_ascii=False, separators=(",", ":"))
+
             writer.writerow(
                 {
-                    "req_id": r.get("req_id", ""),
-                    "title": r.get("title", ""),
-                    "text": r.get("text", ""),
-                    "source": r.get("source", ""),
-                    "system": r.get("system", ""),
-                    "component": r.get("component", ""),
-                    "priority": r.get("priority", ""),
-                    "verification_method": r.get("verification_method", ""),
-                    "acceptance_criteria": r.get("acceptance_criteria", ""),
-                    "status": "LOADED",  # les règles enrichiront plus tard (1.8)
+                    "req_id": req.req_id,
+                    "title": req.title,
+                    "text": req.text,
+                    "source": req.source,
+                    "system": req.system,
+                    "component": req.component,
+                    "priority": req.priority,
+                    "verification_method": req.verification_method,
+                    "acceptance_criteria": req.acceptance_criteria,
+                    "status": a.status,
+                    "score": "" if a.score is None else a.score,
+                    "issues_count": len(a.issues),
+                    "suggestions_count": len(a.suggestions),
+                    "issues_json": issues_json,
+                    "suggestions_json": suggs_json,
                 }
             )
 
@@ -246,19 +290,31 @@ def _html_escape(s: str) -> str:
     )
 
 
-def write_output_html(out_path: Path, requirements: List[Dict[str, str]]) -> None:
+def write_output_html(out_path: Path, analyses: List[AnalysisResult]) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _issues_summary(a: AnalysisResult) -> str:
+        if not a.issues:
+            return '<span style="color:#2e7d32;font-weight:bold">OK</span>'
+        items = "".join(
+            f"<li><b>{_html_escape(i.rule_id)}</b> [{_html_escape(i.severity.value)}] — {_html_escape(i.message)}</li>"
+            for i in a.issues
+        )
+        return f"<ul style='margin:0;padding-left:18px'>{items}</ul>"
 
     rows = "\n".join(
         f"""
         <tr>
-          <td>{_html_escape(r.get("req_id", ""))}</td>
-          <td>{_html_escape(r.get("title", ""))}</td>
-          <td style="white-space:pre-wrap">{_html_escape(r.get("text", ""))}</td>
-          <td>{_html_escape(r.get("source", ""))}</td>
+          <td>{_html_escape(a.requirement.req_id)}</td>
+          <td>{_html_escape(a.requirement.title)}</td>
+          <td style="white-space:pre-wrap">{_html_escape(a.requirement.text)}</td>
+          <td>{_html_escape(a.requirement.source)}</td>
+          <td>{_html_escape(a.status)}</td>
+          <td style="text-align:right">{"" if a.score is None else a.score}</td>
+          <td>{_issues_summary(a)}</td>
         </tr>
         """.strip()
-        for r in requirements
+        for a in analyses
     )
 
     html = f"""<!doctype html>
@@ -266,7 +322,7 @@ def write_output_html(out_path: Path, requirements: List[Dict[str, str]]) -> Non
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>APP1 QRA — Demo Report</title>
+  <title>APP1 QRA — Report</title>
   <style>
     body {{ font-family: Arial, sans-serif; margin: 24px; background: #f5f7fa; color: #333; }}
     header {{ font-size: 24px; font-weight: bold; padding-bottom: 10px; margin-bottom: 20px; border-bottom: 2px solid #888; }}
@@ -280,21 +336,19 @@ def write_output_html(out_path: Path, requirements: List[Dict[str, str]]) -> Non
 <body>
   <header>
     APP1 — QRA (Quality Risk Assessment)
-    <span class="badge">MVP CLI 1.6</span>
+    <span class="badge">MVP CLI 1.8.2</span>
   </header>
 
   <div class="meta">
-    Généré le {dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} — Exigences chargées : {len(requirements)}
+    Généré le {dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} — Exigences analysées : {len(analyses)}
   </div>
-
-  <p>
-    Rapport minimal pour l’étape 1.6 : chargement CSV + outputs.
-    Les règles déterministes et suggestions (IA optionnelle) arriveront aux étapes 1.8–1.10.
-  </p>
 
   <table>
     <thead>
-      <tr><th>ID</th><th>Titre</th><th>Texte</th><th>Source</th></tr>
+      <tr>
+        <th>ID</th><th>Titre</th><th>Texte</th><th>Source</th>
+        <th>Status</th><th>Score</th><th>Issues</th>
+      </tr>
     </thead>
     <tbody>
       {rows}
@@ -309,38 +363,59 @@ def write_output_html(out_path: Path, requirements: List[Dict[str, str]]) -> Non
 def process(data: Dict[str, Any]) -> ProcessResult:
     """
     Fonction principale du module.
+    - Charge le CSV
+    - Convertit chaque ligne en Requirement (modèle domaine)
+    - Exécute les règles déterministes (1.8.2)
+    - Génère outputs CSV/HTML enrichis (Option B audit)
     """
     try:
         if not isinstance(data, dict):
             raise ModuleError("Invalid input: 'data' must be a dict.")
 
-        input_path = Path(str(data.get("input_path", "data/demo_input.csv")))
-        out_dir = Path(str(data.get("out_dir", os.getenv("OUTPUT_DIR", "data"))))
+        input_path = Path(str(data.get("input_path", "data/inputs/demo_input.csv")))
+        out_dir = Path(str(data.get("out_dir", os.getenv("OUTPUT_DIR", "data/outputs"))))
         fail_on_empty = bool(data.get("fail_on_empty", False))
         verbose = bool(data.get("verbose", False))
 
         if verbose:
             log.setLevel(logging.DEBUG)
 
-        log.info("Démarrage APP1 QRA — CLI (1.6)")
+        log.info("Démarrage APP1 QRA — CLI (1.8.2)")
         log.info(f"Input   : {input_path}")
         log.info(f"Out dir : {out_dir}")
-        log.info("AI      : disabled (1.6)")
+        log.info("AI      : disabled (MVP)")
 
-        requirements = load_requirements_csv(input_path)
+        # 1) Load raw rows (dict)
+        rows = load_requirements_csv(input_path)
 
-        if fail_on_empty and not requirements:
+        if fail_on_empty and not rows:
             raise ModuleError("Empty dataset (0 valid requirements).")
 
+        # 2) Map rows -> Requirement (modèles 1.7)
+        requirements: List[Requirement] = []
+        for idx, row in enumerate(rows, start=1):
+            try:
+                requirements.append(_row_to_requirement(row))
+            except Exception as e:
+                raise ModuleError(f"Invalid requirement at row#{idx}: {e}") from e
+
+        log.info("Rules   : enabled (1.8.2)")
+
+        # 3) Analyze (rules)
+        analyses: List[AnalysisResult] = [analyze_requirement(r, verbose=verbose) for r in requirements]
+
+        # 4) Outputs
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_dir.mkdir(parents=True, exist_ok=True)
+
         out_csv = out_dir / f"qra_output_{stamp}.csv"
         out_html = out_dir / f"qra_output_{stamp}.html"
 
-        write_output_csv(out_csv, requirements)
-        write_output_html(out_html, requirements)
+        write_output_csv(out_csv, analyses)
+        write_output_html(out_html, analyses)
 
         payload = {
-            "count": len(requirements),
+            "count": len(analyses),
             "input": str(input_path),
             "out_dir": str(out_dir),
             "output_csv": str(out_csv),
@@ -353,6 +428,7 @@ def process(data: Dict[str, Any]) -> ProcessResult:
     except Exception as e:
         log.exception("Erreur inattendue dans process()")
         raise ModuleError(str(e)) from e
+
 
 
 # ============================================================

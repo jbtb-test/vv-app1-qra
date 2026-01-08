@@ -34,3 +34,6 @@ build/
 data/outputs/*.tmp
 # Generated outputs
 /data/outputs/
+
+#cle API
+.env.secret

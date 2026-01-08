@@ -56,6 +56,7 @@ import json
 from vv_app1_qra.models import AnalysisResult, Requirement
 from vv_app1_qra.rules import analyze_requirement
 
+from vv_app1_qra.ia_assistant import suggest_improvements
 
 # ============================================================
 # 🧾 Logging (local, autonome)
@@ -383,7 +384,10 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         log.info("Démarrage APP1 QRA — CLI (1.8.2)")
         log.info(f"Input   : {input_path}")
         log.info(f"Out dir : {out_dir}")
-        log.info("AI      : disabled (MVP)")
+        enable_ai_env = str(os.getenv("ENABLE_AI", "0"))
+        has_key = bool((os.getenv("OPENAI_API_KEY") or "").strip())
+        log.info(f"AI      : {'enabled' if enable_ai_env.strip() in {'1','true','yes','on'} else 'disabled'} (ENABLE_AI={enable_ai_env}, key={'yes' if has_key else 'no'})")
+
 
         # 1) Load raw rows (dict)
         rows = load_requirements_csv(input_path)
@@ -403,7 +407,24 @@ def process(data: Dict[str, Any]) -> ProcessResult:
 
         # 3) Analyze (rules)
         analyses: List[AnalysisResult] = [analyze_requirement(r, verbose=verbose) for r in requirements]
+        
+        # 3bis) AI suggestions (optional, non-blocking)
+        log.info("AI      : optional suggestions (1.9.2)")
 
+        for analysis in analyses:
+            try:
+                ai_suggestions = suggest_improvements(
+                    req=analysis.requirement,
+                    issues=analysis.issues,
+                    max_suggestions=3,
+                    verbose=verbose,
+                )
+                if ai_suggestions:
+                    analysis.suggestions.extend(ai_suggestions)
+            except Exception as e:
+                # Sécurité absolue : jamais bloquer la CLI à cause de l’IA
+                log.warning(f"AI suggestion skipped for {analysis.requirement.req_id}: {e}")
+  
         # 4) Outputs
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir.mkdir(parents=True, exist_ok=True)

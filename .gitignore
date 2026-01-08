@@ -32,3 +32,5 @@ build/
 
 #output bruit
 data/outputs/*.tmp
+# Generated outputs
+/data/outputs/

@@ -1,0 +1,80 @@
+{% extends "report_base.html" %}
+
+{% block content %}
+
+<h2>Décision qualité globale</h2>
+<p>
+  <strong>Score global :</strong> {{ global_score }} /
+  <strong>Statut :</strong>
+  <span class="{% if global_status == 'OK' %}ok{% elif global_status == 'À risque' %}risk{% else %}ko{% endif %}">
+    {{ global_status }}
+  </span>
+</p>
+
+<hr/>
+
+<h2>Vue synthèse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Score</th>
+      <th>Statut</th>
+      <th>Issues</th>
+      <th>IA</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in requirements %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.score }}</td>
+      <td>{{ r.display_status }}</td>
+      <td>{{ r.issues|length }}</td>
+      <td>
+        {% if r.ai_suggestions %}
+          <span class="badge">AI</span>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<hr/>
+
+<h2>Détails par exigence</h2>
+
+{% for r in requirements %}
+<details style="margin-bottom: 12px;">
+  <summary>{{ r.id }} — Score {{ r.score }} — {{ r.display_status }}</summary>
+
+  <p><strong>Texte exigence :</strong></p>
+  <p>{{ r.text }}</p>
+
+  <p><strong>Issues détectées :</strong></p>
+  {% if r.issues %}
+    <ul>
+      {% for issue in r.issues %}
+        <li>[{{ issue.severity }}] {{ issue.message }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune issue détectée.</p>
+  {% endif %}
+
+  {% if r.ai_suggestions %}
+  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
+  <ul>
+    {% for s in r.ai_suggestions %}
+      <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</details>
+{% endfor %}
+
+{% endblock %}

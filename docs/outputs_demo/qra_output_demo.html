@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>APP1 QRA — Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f5f7fa; color: #333; }
+    header { font-size: 24px; font-weight: bold; padding-bottom: 10px; margin-bottom: 20px; border-bottom: 2px solid #888; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:12px; background:#e9eef6; border:1px solid #c9d6ea; color:#234; margin-left: 8px; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+    th { background: #f0f0f0; text-align: left; }
+    .meta { color:#555; margin: 10px 0 18px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    APP1 — QRA (Quality Risk Assessment)
+    <span class="badge">MVP CLI 1.8.2</span>
+  </header>
+
+  <div class="meta">
+    Généré le 2026-01-08 12:08:32 — Exigences analysées : 4
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Titre</th><th>Texte</th><th>Source</th>
+        <th>Status</th><th>Score</th><th>Issues</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+          <td>REQ-001</td>
+          <td>Train Control / Brake / High</td>
+          <td style="white-space:pre-wrap">The braking system shall stop the train within 800 m when the emergency brake is applied at 160 km/h on dry track.</td>
+          <td>Stakeholder</td>
+          <td>CHECKED</td>
+          <td style="text-align:right">100</td>
+          <td><span style="color:#2e7d32;font-weight:bold">OK</span></td>
+        </tr>
+<tr>
+          <td>REQ-002</td>
+          <td>Train Control / HMI / Medium</td>
+          <td style="white-space:pre-wrap">The HMI should display the status quickly and clearly for the driver.</td>
+          <td>System Engineering</td>
+          <td>CHECKED</td>
+          <td style="text-align:right">70</td>
+          <td><ul style='margin:0;padding-left:18px'><li><b>AMB-001</b> [MINOR] — Modal verb 'should' detected (weak commitment). Prefer 'shall' or measurable phrasing.</li><li><b>AMB-002</b> [MINOR] — Ambiguous term 'quick' detected (not measurable).</li><li><b>TST-002</b> [MINOR] — Acceptance criteria missing (verification might be unclear).</li></ul></td>
+        </tr>
+<tr>
+          <td>REQ-003</td>
+          <td>Medical Device / Infusion Pump / Critical</td>
+          <td style="white-space:pre-wrap">The infusion pump shall deliver 5 mL/h ± 5% for flow rates between 1 mL/h and 10 mL/h at 23°C with saline.</td>
+          <td>Regulatory</td>
+          <td>CHECKED</td>
+          <td style="text-align:right">100</td>
+          <td><span style="color:#2e7d32;font-weight:bold">OK</span></td>
+        </tr>
+<tr>
+          <td>REQ-004</td>
+          <td>Automotive ECU / Diagnostics / Low</td>
+          <td style="white-space:pre-wrap">The ECU shall provide diagnostic information if needed.</td>
+          <td>Development</td>
+          <td>CHECKED</td>
+          <td style="text-align:right">90</td>
+          <td><ul style='margin:0;padding-left:18px'><li><b>AMB-002</b> [MINOR] — Ambiguous term 'if needed' detected (not measurable).</li></ul></td>
+        </tr>
+    </tbody>
+  </table>
+</body>
+</html>

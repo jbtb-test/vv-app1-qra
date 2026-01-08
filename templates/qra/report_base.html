@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ title }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+        }
+        header {
+            font-size: 22px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #888;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: #e9eef6;
+            border: 1px solid #c9d6ea;
+            color: #234;
+            margin-left: 8px;
+        }
+        .ok { color: #1b7f3c; }
+        .risk { color: #b36b00; }
+        .ko { color: #a61b1b; }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #bbb;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background: #e9eef6;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    {{ header }}
+    {% if badge %}
+      <span class="badge">{{ badge }}</span>
+    {% endif %}
+</header>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>

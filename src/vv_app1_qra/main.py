@@ -58,6 +58,8 @@ from vv_app1_qra.rules import analyze_requirement
 
 from vv_app1_qra.ia_assistant import suggest_improvements
 
+from vv_app1_qra.report import generate_html_report
+
 # ============================================================
 # 🧾 Logging (local, autonome)
 # ============================================================
@@ -367,7 +369,8 @@ def process(data: Dict[str, Any]) -> ProcessResult:
     - Charge le CSV
     - Convertit chaque ligne en Requirement (modèle domaine)
     - Exécute les règles déterministes (1.8.2)
-    - Génère outputs CSV/HTML enrichis (Option B audit)
+    - Génère outputs CSV / HTML legacy
+    - Génère rapport HTML QRA structuré (1.10)
     """
     try:
         if not isinstance(data, dict):
@@ -384,18 +387,25 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         log.info("Démarrage APP1 QRA — CLI (1.8.2)")
         log.info(f"Input   : {input_path}")
         log.info(f"Out dir : {out_dir}")
+
         enable_ai_env = str(os.getenv("ENABLE_AI", "0"))
         has_key = bool((os.getenv("OPENAI_API_KEY") or "").strip())
-        log.info(f"AI      : {'enabled' if enable_ai_env.strip() in {'1','true','yes','on'} else 'disabled'} (ENABLE_AI={enable_ai_env}, key={'yes' if has_key else 'no'})")
+        log.info(
+            f"AI      : {'enabled' if enable_ai_env.strip() in {'1','true','yes','on'} else 'disabled'} "
+            f"(ENABLE_AI={enable_ai_env}, key={'yes' if has_key else 'no'})"
+        )
 
-
-        # 1) Load raw rows (dict)
+        # ------------------------------------------------------------
+        # 1) Load raw rows
+        # ------------------------------------------------------------
         rows = load_requirements_csv(input_path)
 
         if fail_on_empty and not rows:
             raise ModuleError("Empty dataset (0 valid requirements).")
 
-        # 2) Map rows -> Requirement (modèles 1.7)
+        # ------------------------------------------------------------
+        # 2) Map rows -> Requirement
+        # ------------------------------------------------------------
         requirements: List[Requirement] = []
         for idx, row in enumerate(rows, start=1):
             try:
@@ -405,10 +415,16 @@ def process(data: Dict[str, Any]) -> ProcessResult:
 
         log.info("Rules   : enabled (1.8.2)")
 
+        # ------------------------------------------------------------
         # 3) Analyze (rules)
-        analyses: List[AnalysisResult] = [analyze_requirement(r, verbose=verbose) for r in requirements]
-        
+        # ------------------------------------------------------------
+        analyses: List[AnalysisResult] = [
+            analyze_requirement(r, verbose=verbose) for r in requirements
+        ]
+
+        # ------------------------------------------------------------
         # 3bis) AI suggestions (optional, non-blocking)
+        # ------------------------------------------------------------
         log.info("AI      : optional suggestions (1.9.2)")
 
         for analysis in analyses:
@@ -422,10 +438,13 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                 if ai_suggestions:
                     analysis.suggestions.extend(ai_suggestions)
             except Exception as e:
-                # Sécurité absolue : jamais bloquer la CLI à cause de l’IA
-                log.warning(f"AI suggestion skipped for {analysis.requirement.req_id}: {e}")
-  
-        # 4) Outputs
+                log.warning(
+                    f"AI suggestion skipped for {analysis.requirement.req_id}: {e}"
+                )
+
+        # ------------------------------------------------------------
+        # 4) Outputs legacy (CSV + HTML MVP)
+        # ------------------------------------------------------------
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -435,13 +454,64 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         write_output_csv(out_csv, analyses)
         write_output_html(out_html, analyses)
 
+        # ------------------------------------------------------------
+        # 4bis) Rapport HTML QRA structuré (1.10)
+        # ------------------------------------------------------------
+        qra_report_path = out_dir / "qra_report.html"
+
+        def _display_status(a: AnalysisResult) -> str:
+            if a.status == "CHECKED" and not a.issues:
+                return "OK"
+            if a.status == "CHECKED" and a.issues:
+                return "À risque"
+            return a.status
+
+        generate_html_report(
+            qra_result={
+                "requirements": [
+                    {
+                        "id": a.requirement.req_id,
+                        "text": a.requirement.text,
+                        "score": a.score,
+                        "raw_status": a.status,
+                        "display_status": _display_status(a),
+                        "issues": [
+                            {
+                                "severity": i.severity.value,
+                                "message": i.message,
+                            }
+                            for i in a.issues
+                        ],
+                        "ai_suggestions": [s.message for s in a.suggestions],
+                    }
+                    for a in analyses
+                ],
+                "global_score": round(
+                    sum(a.score for a in analyses if a.score is not None) / len(analyses),
+                    1,
+                ) if analyses else 0,
+                "global_status": (
+                    "OK"
+                    if all(_display_status(a) == "OK" for a in analyses)
+                    else "À risque"
+                ),
+            },
+            output_path=qra_report_path,
+            verbose=verbose,
+        )
+
+        # ------------------------------------------------------------
+        # 5) Payload final
+        # ------------------------------------------------------------
         payload = {
             "count": len(analyses),
             "input": str(input_path),
             "out_dir": str(out_dir),
             "output_csv": str(out_csv),
             "output_html": str(out_html),
+            "output_qra_report": str(qra_report_path),
         }
+
         return ProcessResult(ok=True, payload=payload, message="OK")
 
     except ModuleError:

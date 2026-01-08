@@ -12,8 +12,6 @@ Outil d’analyse qualité d’exigences (type DOORS / Polarion) qui détecte au
 > IA = **suggestion only** (jamais décisionnelle).  
 > L’application fonctionne **sans IA** par défaut.
 
----
-
 ## Problème métier
 La revue d’exigences est souvent :
 - longue et manuelle
@@ -21,15 +19,11 @@ La revue d’exigences est souvent :
 - sujette aux ambiguïtés et défauts de testabilité
 - difficile à démontrer rapidement en entretien
 
----
-
 ## Valeur apportée
 - **Standardisation** : score qualité + issues typées par exigence
 - **Gain de temps** : pré-filtrage automatique des défauts récurrents
 - **Traçabilité** : règles explicites, tests unitaires, outputs auditables
 - **Démo immédiate** : rapport HTML consultable
-
----
 
 ## Fonctionnement (pipeline résumé)
 
@@ -48,8 +42,6 @@ La revue d’exigences est souvent :
 
 > L’IA est **optionnelle**, **non bloquante**, et **n’influence jamais le score**.
 
----
-
 ## Quickstart
 
 ### Option A — Démo immédiate (sans exécution)
@@ -57,7 +49,10 @@ Ouvrir directement le rapport HTML de démonstration :
 
 - `docs/outputs_demo/qra_output_demo.html`
 
----
+Note GitHub :
+GitHub affiche le code HTML.  
+Pour voir le rapport, téléchargez le fichier ou le dépôt, puis ouvrez
+`docs/outputs_demo/qra_output_demo.html` dans votre navigateur.
 
 ### Option B — Reproduire localement (sans IA, recommandé)
 
@@ -70,7 +65,6 @@ Génère automatiquement :
 - `data/outputs/qra_output_<timestamp>.html`
 
 Ouvrir le fichier HTML généré dans un navigateur.
-
 
 ### Option C — Mode IA (optionnel, avancé)
 

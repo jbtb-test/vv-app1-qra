@@ -1,0 +1,164 @@
+"""
+============================================================
+tests.test_rules
+------------------------------------------------------------
+Description :
+    Tests unitaires (pytest) — APP1 QRA — Étape 1.8.1
+    Validation des règles déterministes qualité exigences.
+
+Objectifs :
+    - Vérifier détection ambiguïté (modal faible / terme ambigu)
+    - Vérifier testabilité (absence VM + AC)
+    - Vérifier qualité AC (trop court / terme ambigu)
+    - Vérifier score (0..100) et status=CHECKED
+============================================================
+"""
+
+import pytest
+
+from vv_app1_qra.models import IssueSeverity, Requirement, SuggestionSource
+from vv_app1_qra.rules import analyze_requirement, compute_score
+
+
+# ============================================================
+# 🧪 Helpers
+# ============================================================
+def _issue_ids(result):
+    return [i.rule_id for i in result.issues]
+
+
+def _issues_by_rule(result, rule_id: str):
+    return [i for i in result.issues if i.rule_id == rule_id]
+
+
+# ============================================================
+# 🧪 Tests
+# ============================================================
+def test_rule_tst_001_not_testable_when_no_vm_and_no_ac():
+    r = Requirement(
+        req_id="REQ-001",
+        title="Login",
+        text="The system shall authenticate users.",
+        verification_method="",
+        acceptance_criteria="",
+    )
+    res = analyze_requirement(r)
+
+    assert res.status == "CHECKED"
+    assert "TST-001" in _issue_ids(res)
+
+    issue = _issues_by_rule(res, "TST-001")[0]
+    assert issue.severity == IssueSeverity.MAJOR
+    assert issue.category == "TESTABILITY"
+    assert issue.field in ("verification_method", "")
+
+    # suggestions RULE présentes
+    assert len(res.suggestions) >= 1
+    assert all(s.source == SuggestionSource.RULE for s in res.suggestions)
+
+
+def test_rule_tst_002_acceptance_criteria_missing_only():
+    r = Requirement(
+        req_id="REQ-002",
+        title="Timeout",
+        text="The system shall timeout after inactivity.",
+        verification_method="Test",
+        acceptance_criteria="",
+    )
+    res = analyze_requirement(r)
+    assert "TST-002" in _issue_ids(res)
+    issue = _issues_by_rule(res, "TST-002")[0]
+    assert issue.severity == IssueSeverity.MINOR
+
+
+def test_rule_amb_001_detects_weak_modal():
+    r = Requirement(
+        req_id="REQ-003",
+        title="Performance",
+        text="The system should be fast and user-friendly.",
+        verification_method="Test",
+        acceptance_criteria="Response time < 200 ms for 95% of requests.",
+    )
+    res = analyze_requirement(r)
+
+    assert "AMB-001" in _issue_ids(res)
+    issue = _issues_by_rule(res, "AMB-001")[0]
+    assert issue.severity == IssueSeverity.MINOR
+    assert "should" in issue.message.lower()
+
+
+def test_rule_amb_002_detects_ambiguous_term():
+    r = Requirement(
+        req_id="REQ-004",
+        title="UI",
+        text="The UI shall be intuitive and robust.",
+        verification_method="Inspection",
+        acceptance_criteria="UI passes checklist v1.",
+    )
+    res = analyze_requirement(r)
+
+    assert "AMB-002" in _issue_ids(res)
+    issue = _issues_by_rule(res, "AMB-002")[0]
+    assert issue.severity == IssueSeverity.MINOR
+
+
+def test_rule_ac_001_detects_too_short_ac():
+    r = Requirement(
+        req_id="REQ-005",
+        title="Export",
+        text="The system shall export a report.",
+        verification_method="Test",
+        acceptance_criteria="Works.",
+    )
+    res = analyze_requirement(r)
+    assert "AC-001" in _issue_ids(res)
+    issue = _issues_by_rule(res, "AC-001")[0]
+    assert issue.severity == IssueSeverity.MINOR
+    assert issue.field == "acceptance_criteria"
+
+
+def test_rule_ac_002_detects_ambiguous_term_in_ac():
+    r = Requirement(
+        req_id="REQ-006",
+        title="Security",
+        text="The system shall log access attempts.",
+        verification_method="Test",
+        acceptance_criteria="Logging is secure and adequate.",
+    )
+    res = analyze_requirement(r)
+    assert "AC-002" in _issue_ids(res)
+    issue = _issues_by_rule(res, "AC-002")[0]
+    assert issue.severity == IssueSeverity.INFO
+
+
+def test_score_computation_clamped_0_100():
+    r = Requirement(
+        req_id="REQ-007",
+        title="Bad req",
+        text="The system should be fast, robust, and user-friendly.",
+        verification_method="",
+        acceptance_criteria="",
+    )
+    res = analyze_requirement(r)
+
+    # score borné
+    assert isinstance(res.score, int)
+    assert 0 <= res.score <= 100
+
+    # cohérence compute_score()
+    assert res.score == compute_score(res.issues)
+
+
+def test_no_issues_for_good_requirement():
+    r = Requirement(
+        req_id="REQ-008",
+        title="Response time",
+        text="The system shall respond within 200 ms for 95% of requests under nominal load.",
+        verification_method="Test",
+        acceptance_criteria="Given nominal load, when sending 1000 requests, then 95% have latency <= 200 ms.",
+    )
+    res = analyze_requirement(r)
+    assert res.status == "CHECKED"
+    assert res.issues == []
+    assert res.suggestions == []
+    assert res.score == 100

@@ -32,8 +32,16 @@ description = "APP1 QRA — Quality Risk Assessment CLI"
 requires-python = ">=3.10"
 
 # Dépendances runtime (volontairement vide en 1.6)
-dependencies = []
+# Runtime minimal (tool works without AI)
+dependencies = [
+  "Jinja2>=3.1.6",
+]
 
+[project.optional-dependencies]
+# Optional AI mode (suggestion-only, non-blocking)
+ai = [
+  "openai>=2.14.0",
+]
 
 [tool.setuptools]
 # Indique que les packages Python sont situés dans le dossier src/

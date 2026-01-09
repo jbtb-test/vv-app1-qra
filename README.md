@@ -9,8 +9,10 @@ Outil d’analyse qualité d’exigences (type DOORS / Polarion) qui détecte au
 - suggestions **optionnelles** via IA
 - génération d’outputs démontrables (CSV + HTML)
 
-> IA = **suggestion only** (jamais décisionnelle).  
+> IA = **suggestion only** (jamais décisionnelle).
 > L’application fonctionne **sans IA** par défaut.
+
+---
 
 ## Problème métier
 La revue d’exigences est souvent :
@@ -22,8 +24,10 @@ La revue d’exigences est souvent :
 ## Valeur apportée
 - **Standardisation** : score qualité + issues typées par exigence
 - **Gain de temps** : pré-filtrage automatique des défauts récurrents
-- **Traçabilité** : règles explicites, tests unitaires, outputs auditables
-- **Démo immédiate** : rapport HTML consultable
+- **Traçabilité V&V** : règles explicites, tests unitaires, décisions auditables
+- **Démo portfolio** : aperçu immédiat (PNG) + rapport HTML consultable sans exécution
+
+---
 
 ## Fonctionnement (pipeline résumé)
 
@@ -39,22 +43,52 @@ La revue d’exigences est souvent :
 4) **Sorties**
    - Rapport CSV (audit)
    - Rapport HTML (consultable)
+   - Revue humaine finale
 
 > L’IA est **optionnelle**, **non bloquante**, et **n’influence jamais le score**.
 
+---
+
+## Installation (local)
+
+```bash
+python -m venv venv
+# Windows PowerShell:
+venv\Scripts\activate
+python -m pip install -U pip
+python -m pip install -e .
+python -m pip install -r requirements.txt
+```
+
+## Tests (CI-friendly)
+```bash
+pytest -vv
+```
+
+---
+
 ## Quickstart
 
-### Option A — Démo immédiate (sans exécution)
-Ouvrir directement le rapport HTML de démonstration :
+### Option A — Démo sans exécution (portfolio)
 
+Cette option correspond à une démonstration “portfolio” :
+les résultats sont figés, reproductibles, et identiques à une exécution locale.
+
+Aperçu du rapport (PNG) :
+
+![Aperçu rapport QRA](docs/outputs_demo/qra_output_demo.png)
+
+Rapport HTML de démonstration :
 - `docs/outputs_demo/qra_output_demo.html`
 
-Note GitHub :
-GitHub affiche le code HTML.  
-Pour voir le rapport, téléchargez le fichier ou le dépôt, puis ouvrez
-`docs/outputs_demo/qra_output_demo.html` dans votre navigateur.
+Note :
+- GitHub n’affiche pas le rendu HTML.
+- Le PNG ci-dessus montre le rendu réel du rapport.
+- Le fichier HTML reste la référence interactive hors GitHub.
 
-### Option B — Reproduire localement (sans IA, recommandé)
+### Option B — Reproduire localement (sans IA, recommandé pour démonstration déterministe)
+
+Cette option correspond au mode nominal de l’outil (100 % déterministe).
 
 ```bash
 python -m vv_app1_qra.main --verbose
@@ -77,6 +111,8 @@ python -m vv_app1_qra.main --verbose
 > L’IA fournit uniquement des suggestions textuelles.
 > Elle ne modifie ni le score ni le statut des exigences.
 
+---
+
 ## Structure du projet
 
 ```text
@@ -90,7 +126,4 @@ vv-app1-qra/
 │  └─ outputs_demo/
 └─ README.md
 ```
-
-
-
 

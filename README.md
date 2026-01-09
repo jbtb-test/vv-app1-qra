@@ -102,6 +102,10 @@ Ouvrir le fichier HTML généré dans un navigateur.
 
 ### Option C — Mode IA (optionnel, avancé)
 
+Copier `.env.example` en `.env` et renseigner les valeurs localement.  
+⚠️ Ne jamais committer `.env` / `.env.*` (seul `.env.example` est versionné).
+
+
 ```powershell
 $env:ENABLE_AI="1"
 $env:OPENAI_API_KEY="your_key_here"

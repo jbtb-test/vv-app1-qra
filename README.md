@@ -71,20 +71,19 @@ pytest -vv
 
 ### Option A — Démo sans exécution (portfolio)
 
-Cette option correspond à une démonstration “portfolio” :
-les résultats sont figés, reproductibles, et identiques à une exécution locale.
+Démonstration **clé en main pour recruteur**, sans installer ni exécuter Python.
 
-Aperçu du rapport (PNG) :
+Ouvrir :
+- `docs/demo/README.md`
 
-![Aperçu rapport QRA](docs/outputs_demo/qra_output_demo.png)
+Accès direct :
+- **Sans IA (moteur déterministe)**  
+  `docs/demo/assets/outputs_no_ai/rapport.html`
+- **Avec IA (suggestions gouvernées)**  
+  `docs/demo/assets/outputs_ai/rapport.html`
 
-Rapport HTML de démonstration :
-- `docs/outputs_demo/qra_output_demo.html`
-
-Note :
-- GitHub n’affiche pas le rendu HTML.
-- Le PNG ci-dessus montre le rendu réel du rapport.
-- Le fichier HTML reste la référence interactive hors GitHub.
+Des captures d’écran sont disponibles dans :
+`docs/demo/assets/screenshots/`
 
 ### Option B — Reproduire localement (sans IA, recommandé pour démonstration déterministe)
 
@@ -127,7 +126,7 @@ vv-app1-qra/
 ├─ data/
 │  └─ inputs/
 ├─ docs/
-│  └─ outputs_demo/
+│  └─ demo/
 └─ README.md
 ```
 

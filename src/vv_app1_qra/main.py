@@ -486,10 +486,12 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                     }
                     for a in analyses
                 ],
-                "global_score": round(
-                    sum(a.score for a in analyses if a.score is not None) / len(analyses),
-                    1,
-                ) if analyses else 0,
+                
+                "global_score": (
+                    round(sum(valid_scores) / len(valid_scores), 1)
+                    if (valid_scores := [a.score for a in analyses if isinstance(a.score, int)])
+                    else 0.0
+                ),               
                 "global_status": (
                     "OK"
                     if all(_display_status(a) == "OK" for a in analyses)
@@ -507,6 +509,15 @@ def process(data: Dict[str, Any]) -> ProcessResult:
             "count": len(analyses),
             "input": str(input_path),
             "out_dir": str(out_dir),
+
+            # ✅ legacy timestamped outputs (explicite)
+            "output_legacy_csv": str(out_csv),
+            "output_legacy_html": str(out_html),
+
+            # ✅ stable report outputs (explicite)
+            "output_qra_report_html": str(qra_report_path),
+
+            # ✅ backward compatibility (tests / anciens consommateurs)
             "output_csv": str(out_csv),
             "output_html": str(out_html),
             "output_qra_report": str(qra_report_path),

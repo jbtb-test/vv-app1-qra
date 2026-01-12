@@ -76,3 +76,15 @@ Pour une revue rapide en entretien :
 
 Des captures PNG sont fournies dans :
 `assets/screenshots/`
+
+---
+
+## 6) Exécution locale (optionnelle) — outputs runtime
+
+Si l’on exécute l’outil localement (`python -m vv_app1_qra.main`), il peut générer :
+- des **outputs runtime legacy timestampés** (ex: `qra_output_*.html` / `*.csv`) dans `data/outputs/`
+- et/ou un **rapport stable** (`rapport.html` + `results.csv`) selon le mode de génération.
+
+➡️ Pour un recruteur, la référence “sans exécuter” reste :
+- `assets/outputs_no_ai/rapport.html`
+- `assets/outputs_ai/rapport.html`

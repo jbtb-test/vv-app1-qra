@@ -14,25 +14,24 @@ Ce walkthrough permet :
 
 ## Étape 1 — Démo sans exécution (recommandée en entretien)
 
-Cette étape permet de montrer la valeur de l’outil
-**sans dépendance à l’environnement technique**.
+Cette étape montre la valeur de l’outil **sans dépendre de l’environnement**.
+➡️ Elle s’appuie sur le **pack démo figé** dans `docs/demo/assets/`.
 
 ### Action
 
-1 Sans IA
-Ouvrir le fichier : demo/assets/outputs_no_ai/rapport.html
-ou l'aperçu du rapport (JPG) : ![Aperçu rapport QRA (sans IA)](demo/assets/screenshots/no_ai_report.jpg)
+1) **Sans IA (déterministe)**
+- Ouvrir : `demo/assets/outputs_no_ai/rapport.html`
+- Ou aperçu JPG : ![Aperçu rapport QRA (sans IA)](demo/assets/screenshots/no_ai_report.jpg)
 
-2 Avec IA
-Ouvrir le fichier : demo/assets/outputs_ai/rapport.html
-ou l'aperçu du rapport (JPG) : ![Aperçu rapport QRA (avec IA)](demo/assets/screenshots/ai_report.jpg)
-
+2) **Avec IA (suggestion-only)**
+- Ouvrir : `demo/assets/outputs_ai/rapport.html`
+- Ou aperçu JPG : ![Aperçu rapport QRA (avec IA)](demo/assets/screenshots/ai_report.jpg)
 
 ### À montrer
 
 - score global et statut qualité
 - table de synthèse des exigences
-- détail d’une exigence avec ses issues
+- détail d’une exigence avec ses issues / suggestions
 
 **Chaque exigence est analysée indépendamment, à partir de règles explicites et traçables.**
 
@@ -54,9 +53,9 @@ ou l'aperçu du rapport (JPG) : ![Aperçu rapport QRA (avec IA)](demo/assets/scr
 python -m vv_app1_qra.main --verbose
 ```
 
-Résultats générés
-- CSV de synthèse dans data/outputs/
-- rapport HTML local
+Résultats générés (runtime)
+- exports dans data/outputs/ (peuvent être timestampés / legacy selon le mode)
+- et/ou un rapport stable rapport.html + results.csv selon la configuration
 
 **Le rapport est généré automatiquement et reflète l’état courant du moteur déterministe.**
 

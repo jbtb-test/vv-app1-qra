@@ -60,7 +60,7 @@
 <header>
     Quality Risk Assessment — Outil V&amp;V
     
-      <span class="badge">2026-01-12 09:24</span>
+      <span class="badge">2026-01-12 12:28</span>
     
 </header>
 
@@ -162,11 +162,11 @@
   <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
   <ul>
     
-      <li>Refine requirement: Stop distance ≤ 800 m from emergency brake command at 160.0 ± 1.0 km/h on dry, straight (R ≥ 1000 m), level (|grade| ≤ 2 ‰) track with train at maximum operating mass; distance measured from command to standstill.</li>
+      <li>Requirement: At maximum operating mass on straight, level, dry track (adhesion µ ≥ 0.25), when an emergency brake command is issued at 160 km/h ±1 km/h, the train shall reach 0 km/h within 800 m measured from command (t0) to stop.</li>
     
-      <li>Acceptance criteria: 10 consecutive emergency stops under the above conditions; each run: initial speed 160 ± 1 km/h, stopping distance ≤ 800 m, no precipitation in prior 60 min, crosswind ≤ 5 m/s.</li>
+      <li>Acceptance criteria: 20 runs under stated conditions; in each run stopping distance ≤ 800 m; initial speed 160 ±1 km/h; distance measured by calibrated odometry (±2 m) from brake command to v=0.</li>
     
-      <li>Acceptance criteria (measurement): Use calibrated distance measurement with absolute error ≤ 0.5% or 5 m (whichever greater); synchronize brake command timestamp and distance measurement within ±50 ms.</li>
+      <li>Acceptance criteria (environment): Track gradient ±0.1%, straight track (radius ≥ 5 km), wind ≤ 5 m/s, no precipitation for ≥ 2 h, railhead dry verified with adhesion test µ ≥ 0.25.</li>
     
   </ul>
   
@@ -201,11 +201,11 @@
     
       <li>Ajouter des critères d’acceptation concrets (Given/When/Then, seuils, tolérances).</li>
     
-      <li>Replace with: &#39;The HMI shall present the current state of each driver-visible status indicator within 500 ms from receipt of the corresponding input signal.&#39;</li>
+      <li>Rewrite requirement: &#39;The HMI shall display the current train status within 1.0 s of receiving a status change event.&#39;</li>
     
-      <li>Add AC: &#39;Status text/numerals shall have ≥4.0 mm character height at 700±50 mm viewing distance and a contrast ratio ≥4.5:1 against background.&#39;</li>
+      <li>Add requirement: &#39;The train status indicator shall be persistently visible on all HMI screens, in the top-right quadrant, with text height ≥ 6 mm and contrast ratio ≥ 7:1.&#39;</li>
     
-      <li>Add AC: &#39;A persistent status area shall be visible on the main driving screen without navigation; each critical status icon shall be ≥10 mm and accompanied by a text label.&#39;</li>
+      <li>Add acceptance criteria (Inspection): AC1: Status indicator present on all screens; AC2: Update latency ≤ 1.0 s (observed with stopwatch/video); AC3: Text height ≥ 6 mm; AC4: Contrast ratio ≥ 7:1; AC5: Status shown by both text and icon.</li>
     
   </ul>
   
@@ -226,11 +226,11 @@
   <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
   <ul>
     
-      <li>REQ: For setpoints 1.0–10.0 mL/h, at 23°C ±1°C using 0.9% saline, the pump shall deliver an average volumetric flow within ±5.0% of the setpoint when averaged over 60 minutes after a 5-minute stabilization.</li>
+      <li>Revise requirement: For setpoints {1, 3, 5, 7, 10} mL/h at 23°C ±2°C with 0.9% saline, the average delivered volume over 60 min shall be within ±5% of the setpoint.</li>
     
-      <li>AC: Test at 1.0, 5.0, and 10.0 mL/h; exclude first 5 min; measure for 60 min gravimetrically with scale resolution ≤0.01 g and uncertainty ≤0.1% of reading; pass if each average is within ±5% of setpoint.</li>
+      <li>Acceptance criteria: Measure gravimetrically (balance resolution ≤0.01 g, uncertainty ≤0.5%, NIST-traceable); convert using saline density 1.004 g/mL at 23°C; exclude first 5 min stabilization; sample ≥1 Hz.</li>
     
-      <li>AC: Use standard infusion set with new tubing; maintain outlet backpressure 100 ±10 mmHg; ambient 23°C ±1°C; fluid 0.9% saline; document density used for mass-to-volume conversion.</li>
+      <li>Acceptance criteria: Verify at downstream backpressure 100 ±10 mmHg using a 180 cm PVC infusion set; bag height adjusted for 0 cm head relative to pump outlet; ambient 23°C ±2°C, RH 30–70%.</li>
     
   </ul>
   
@@ -257,11 +257,11 @@
     
       <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
     
-      <li>Rewrite requirement: &#39;The ECU shall provide diagnostic information (DTC code, timestamp, current operating mode) upon receipt of a valid diagnostic request on the diagnostics interface.&#39;</li>
+      <li>Rewrite requirement: &#39;Upon receiving a diagnostic request via the diagnostic interface, the ECU shall return diagnostic information within 100 ms.&#39;</li>
     
-      <li>Alternative trigger: &#39;The ECU shall record diagnostic information (DTC code, timestamp, current operating mode) when a DTC is set and make it retrievable via the diagnostics interface.&#39;</li>
+      <li>Add requirement: &#39;When a DTC is set or cleared, the ECU shall store diagnostic information within 10 ms and retain at least 10 records across power cycles.&#39;</li>
     
-      <li>Add acceptance criteria: &#39;Given ≥1 stored DTC, a valid diagnostic request returns at least one record with DTC code, timestamp, and current operating mode; given 0 stored DTCs, the ECU returns an explicit no-DTC indicator; given an invalid request, the ECU returns an error response.&#39;</li>
+      <li>Augment acceptance criteria: &#39;Across 100 consecutive diagnostic requests at 10 Hz, each response includes the DTC code, timestamp (≥1 ms resolution), and current operating mode, with response time ≤100 ms and 100% success.&#39;</li>
     
   </ul>
   

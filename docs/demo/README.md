@@ -1,24 +1,78 @@
 # APP1 QRA — Demo Pack (Recruteur)
 
-Ce dossier est une **démo consultable sans exécuter le code** :
-- un **input CSV**
-- des **outputs** en 2 modes : **Sans IA** (défaut) / **Avec IA** (optionnel)
-- (à ajouter) **captures PNG** pour lecture rapide
+Ce dossier contient une **démonstration complète consultable sans exécuter le code**.
+
+Il permet de comparer :
+- le moteur **déterministe** de qualité des exigences
+- et la version **assistée par IA** (suggestion-only)
 
 ---
 
 ## 1) Input
+
+Fichier d’entrée commun aux deux modes :
+
 - `assets/inputs/demo_input.csv`
 
-## 2) Outputs — Sans IA (déterministe)
-- HTML : `assets/outputs_no_ai/report.html`
-- CSV  : `assets/outputs_no_ai/results.csv`
+Il représente un export typique DOORS / Polarion (exigences système).
 
-## 3) Outputs — Avec IA (suggestion-only)
-- HTML : `assets/outputs_ai/report.html`
-- CSV  : **à venir** (quand le code générera `qra_report.csv`)
+---
+
+## 2) Mode **Sans IA** — moteur déterministe
+
+Analyse basée **uniquement sur les règles métier QRA** (pas d’IA).
+
+- Rapport HTML :  
+  `assets/outputs_no_ai/rapport.html`
+
+- Export CSV :  
+  `assets/outputs_no_ai/results.csv`
+
+Contenu :
+- scores de qualité
+- statuts OK / À risque
+- défauts détectés (ambiguïté, testabilité, critères d’acceptation…)
+
+➡️ C’est la **référence V&V** (reproductible, auditée, traçable).
+
+---
+
+## 3) Mode **Avec IA** — suggestions gouvernées
+
+Même moteur déterministe, avec en plus des **suggestions IA non décisionnelles**.
+
+- Rapport HTML :  
+  `assets/outputs_ai/rapport.html`
+
+- Export CSV :  
+  `assets/outputs_ai/results.csv`
+
+Contenu supplémentaire :
+- reformulations proposées
+- exemples de critères d’acceptation
+- compléments de vérifiabilité
+
+➡️ L’IA **n’altère jamais les scores** ni les statuts, elle **propose uniquement**.
+
+---
 
 ## 4) Gouvernance IA (résumé)
-- Par défaut : IA désactivée
-- L’IA ne décide rien : elle ajoute uniquement des suggestions
-- Fallback strict : si IA indisponible → aucun impact sur les résultats déterministes
+
+- IA **désactivée par défaut**
+- Activation contrôlée via variable d’environnement `ENABLE_AI`
+- Clé absente ou invalide → **fallback strict**
+- Le moteur QRA reste **100 % déterministe**
+
+➡️ L’IA est un **assistant**, jamais un décideur.
+
+---
+
+## 5) Lecture rapide
+
+Pour une revue rapide en entretien :
+
+- Sans IA → `assets/outputs_no_ai/rapport.html`
+- Avec IA → `assets/outputs_ai/rapport.html`
+
+Des captures PNG sont fournies dans :
+`assets/screenshots/`

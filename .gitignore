@@ -49,8 +49,20 @@ build/
 # Generated runtime outputs
 # --------------------
 data/outputs/
+data/outputs/*
 
 # --------------------
 # Dependency lock (local snapshot)
 # --------------------
 requirements.lock.txt
+
+# --------------------
+# Mypy / Ruff / caches divers
+# --------------------
+.mypy_cache/
+.ruff_cache/
+
+# --------------------
+# Python artifacts
+# --------------------
+*.log

@@ -8,6 +8,7 @@ L’objectif est d’illustrer :
 - les **limites assumées**
 - la **maîtrise humaine conservée**
 
+> Démo consultable : voir `docs/demo/README.md`
 ---
 
 ## Avant — Revue manuelle classique

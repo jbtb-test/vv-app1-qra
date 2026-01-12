@@ -50,8 +50,7 @@ l’outil génère automatiquement :
 - un rapport CSV, orienté audit et traçabilité
 - un rapport HTML, lisible immédiatement
 
-Un rapport HTML de démonstration est fourni
-pour consultation sans installation.
+Un rapport HTML de démonstration est fourni dans `docs/demo/assets/outputs_no_ai/report.html` (voir `docs/demo/README.md`).
 
 ---
 

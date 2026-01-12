@@ -40,8 +40,9 @@ L’outil fonctionne normalement :
 
 Les outputs sont volatiles et dépendants de l’exécution.
 
-Un rapport HTML de démonstration figé
-est fourni pour consultation directe sur GitHub.
+Un rapport HTML de démonstration figé est fourni pour consultation directe sur GitHub.
+Voir `docs/demo/README.md` (pack recruteur) et `docs/demo/assets/outputs_no_ai/report.html`.
+
 
 ---
 

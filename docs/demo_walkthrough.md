@@ -19,8 +19,13 @@ Cette étape permet de montrer la valeur de l’outil
 
 ### Action
 
-Ouvrir le fichier : docs/outputs_demo/qra_output_demo.html ou l'aperçu du rapport (PNG) :
-![Aperçu rapport QRA](docs/outputs_demo/qra_output_demo.png)
+1 Sans IA
+Ouvrir le fichier : docs/demo/assets/outputs_no_ai/report.html
+ou l'aperçu du rapport (PNG) : ![Aperçu rapport QRA (sans IA)](docs/demo/assets/screenshots/no_ai_report.png)
+
+2 Avec IA
+Ouvrir le fichier : docs/demo/assets/outputs_ai/report.html
+ou l'aperçu du rapport (PNG) : ![Aperçu rapport QRA (avec IA)](docs/demo/assets/screenshots/ai_report.png)
 
 ### À montrer
 

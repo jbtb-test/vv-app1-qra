@@ -1,5 +1,7 @@
 # Architecture — APP1 QRA (Quality Risk Assessment)
 
+> Démo recruteur (sans exécuter le code) : voir `docs/demo/README.md`
+
 ## 1. Objectif
 
 APP1 QRA est une application d’analyse de la **qualité des exigences**

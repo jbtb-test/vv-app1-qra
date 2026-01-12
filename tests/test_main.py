@@ -15,17 +15,16 @@ Usage :
 ============================================================
 """
 
-from __future__ import annotations
-
 import csv
-from pathlib import Path
-
 import pytest
-from vv_app1_qra.main import ModuleError, process
+import os
 
-import csv
+from pathlib import Path
+from vv_app1_qra.main import ModuleError, process
 from pathlib import Path
 from vv_app1_qra.main import process
+
+
 
 # ============================================================
 # 🔧 Fixtures
@@ -157,3 +156,32 @@ def test_cli_outputs_are_enriched_with_rules(tmp_path):
     assert r2["status"] == "CHECKED"
     assert int(r2["issues_count"]) >= 1
     assert r2["score"] != ""  # score présent
+
+
+def test_main_ai_enabled_without_key_fallback(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_AI", "1")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    out = process(
+        {
+            "input_path": "data/inputs/demo_input.csv",
+            "out_dir": str(tmp_path),
+            "fail_on_empty": False,
+            "verbose": False,
+        }
+    )
+
+    assert out.ok is True
+    assert "OK" in str(out.message)
+
+    # Le report stable doit exister
+    report_html = Path(out.payload["output_qra_report_html"])
+    report_csv = Path(out.payload["output_qra_report_csv"])
+    assert report_html.exists()
+    assert report_csv.exists()
+
+    html = report_html.read_text(encoding="utf-8")
+    # Fallback => mode RULES (pas IA)
+    assert "Mode suggestions" in html
+    assert "RULES" in html
+

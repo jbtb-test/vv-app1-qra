@@ -13,6 +13,18 @@ Génération du rapport HTML QRA (APP1)
 from pathlib import Path
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+import logging
+log = logging.getLogger(__name__)
+
+import csv
+from typing import Any, Dict
+
+def _resolve_template_dir() -> Path:
+    base_dir = Path(__file__).resolve().parents[2]  # repo root
+    template_dir = base_dir / "templates" / "qra"
+    if not template_dir.exists():
+        raise FileNotFoundError(f"Template directory not found: {template_dir}")
+    return template_dir
 
 
 def generate_html_report(qra_result: dict, output_path: Path, *, verbose: bool = False) -> Path:
@@ -34,8 +46,7 @@ def generate_html_report(qra_result: dict, output_path: Path, *, verbose: bool =
         Chemin du fichier HTML généré.
     """
 
-    base_dir = Path(__file__).resolve().parents[2]
-    template_dir = base_dir / "templates" / "qra"
+    template_dir = _resolve_template_dir()
 
     env = Environment(
         loader=FileSystemLoader(template_dir),
@@ -61,6 +72,43 @@ def generate_html_report(qra_result: dict, output_path: Path, *, verbose: bool =
     output_path.write_text(html, encoding="utf-8")
 
     if verbose:
-        print(f"[REPORT] HTML généré : {output_path}")
+        log.info("[REPORT] HTML generated: %s", output_path)
+
+    return output_path
+
+def generate_csv_report(qra_result: Dict[str, Any], output_path: Path, *, verbose: bool = False) -> Path:
+    rows = qra_result.get("requirements", []) or []
+
+    fieldnames = [
+        "id",
+        "score",
+        "raw_status",
+        "display_status",
+        "text",
+        "issues_count",
+        "ai_suggestions_count",
+    ]
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        for r in rows:
+            issues = r.get("issues", []) or []
+            ai_sugs = r.get("ai_suggestions", []) or []
+            w.writerow(
+                {
+                    "id": r.get("id", ""),
+                    "score": r.get("score", ""),
+                    "raw_status": r.get("raw_status", ""),
+                    "display_status": r.get("display_status", ""),
+                    "text": r.get("text", ""),
+                    "issues_count": len(issues),
+                    "ai_suggestions_count": len(ai_sugs),
+                }
+            )
+
+    if verbose:
+        log.info("[REPORT] CSV generated: %s", output_path)
 
     return output_path

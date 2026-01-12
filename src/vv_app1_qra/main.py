@@ -58,7 +58,7 @@ from vv_app1_qra.rules import analyze_requirement
 
 from vv_app1_qra.ia_assistant import suggest_improvements
 
-from vv_app1_qra.report import generate_html_report
+from vv_app1_qra.report import generate_html_report, generate_csv_report
 
 # ============================================================
 # 🧾 Logging (local, autonome)
@@ -455,9 +455,10 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         write_output_html(out_html, analyses)
 
         # ------------------------------------------------------------
-        # 4bis) Rapport HTML QRA structuré (1.10)
+        # 4bis) Rapport HTML/CSV QRA structuré (1.10)
         # ------------------------------------------------------------
         qra_report_path = out_dir / "qra_report.html"
+        qra_report_csv_path = out_dir / "qra_report.csv"
 
         def _display_status(a: AnalysisResult) -> str:
             if a.status == "CHECKED" and not a.issues:
@@ -466,41 +467,48 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                 return "À risque"
             return a.status
 
+        qra_result = {
+            "requirements": [
+                {
+                    "id": a.requirement.req_id,
+                    "text": a.requirement.text,
+                    "score": a.score,
+                    "raw_status": a.status,
+                    "display_status": _display_status(a),
+                    "issues": [
+                        {
+                            "severity": i.severity.value,
+                            "message": i.message,
+                        }
+                        for i in a.issues
+                    ],
+                    "ai_suggestions": [s.message for s in a.suggestions],
+                }
+                for a in analyses
+            ],
+            "global_score": (
+                round(sum(valid_scores) / len(valid_scores), 1)
+                if (valid_scores := [a.score for a in analyses if isinstance(a.score, int)])
+                else 0.0
+            ),
+            "global_status": (
+                "OK"
+                if all(_display_status(a) == "OK" for a in analyses)
+                else "À risque"
+            ),
+        }
+
         generate_html_report(
-            qra_result={
-                "requirements": [
-                    {
-                        "id": a.requirement.req_id,
-                        "text": a.requirement.text,
-                        "score": a.score,
-                        "raw_status": a.status,
-                        "display_status": _display_status(a),
-                        "issues": [
-                            {
-                                "severity": i.severity.value,
-                                "message": i.message,
-                            }
-                            for i in a.issues
-                        ],
-                        "ai_suggestions": [s.message for s in a.suggestions],
-                    }
-                    for a in analyses
-                ],
-                
-                "global_score": (
-                    round(sum(valid_scores) / len(valid_scores), 1)
-                    if (valid_scores := [a.score for a in analyses if isinstance(a.score, int)])
-                    else 0.0
-                ),               
-                "global_status": (
-                    "OK"
-                    if all(_display_status(a) == "OK" for a in analyses)
-                    else "À risque"
-                ),
-            },
+            qra_result=qra_result,
             output_path=qra_report_path,
             verbose=verbose,
         )
+        generate_csv_report(
+            qra_result=qra_result,
+            output_path=qra_report_csv_path,
+            verbose=verbose,
+        )
+
 
         # ------------------------------------------------------------
         # 5) Payload final
@@ -521,6 +529,7 @@ def process(data: Dict[str, Any]) -> ProcessResult:
             "output_csv": str(out_csv),
             "output_html": str(out_html),
             "output_qra_report": str(qra_report_path),
+            "output_qra_report_csv": str(qra_report_csv_path),
         }
 
         return ProcessResult(ok=True, payload=payload, message="OK")

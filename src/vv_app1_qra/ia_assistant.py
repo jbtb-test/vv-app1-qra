@@ -136,25 +136,18 @@ def suggest_improvements(
     model: Optional[str] = None,
     verbose: bool = False,
 ) -> List[Suggestion]:
-    """
-    Retourne des Suggestion(source=AI) si IA activée.
-    Sinon : [] (fallback contrôlé).
-
-    Ne lève pas d'erreur si openai n'est pas installé ou si clé absente.
-    """
     if verbose:
         log.setLevel(logging.DEBUG)
 
-    # Fallback strict : app fonctionne sans IA
-    if not _truthy(os.getenv("ENABLE_AI", "0")):
-        log.debug("AI disabled via ENABLE_AI=0")
+    if not is_ai_enabled():
+        enable_ai_env = (os.getenv("ENABLE_AI", "0") or "").strip().lower()
+        has_key = bool((os.getenv("OPENAI_API_KEY") or "").strip())
+        if enable_ai_env in {"1", "true", "yes", "on"} and not has_key:
+            log.warning("AI requested (ENABLE_AI=1) but OPENAI_API_KEY missing -> fallback []")
+        else:
+            log.debug("AI disabled -> fallback []")
         return []
 
-    if not (os.getenv("OPENAI_API_KEY") or "").strip():
-        log.warning("AI requested (ENABLE_AI=1) but OPENAI_API_KEY missing -> fallback []")
-        return []
-
-    # Import lazy (pas de dépendance obligatoire)
     try:
         from openai import OpenAI  # type: ignore
     except Exception:
@@ -166,44 +159,45 @@ def suggest_improvements(
 
     try:
         client = OpenAI()
-        # Responses API (recommandé)
-        resp = client.responses.create(
-            model=used_model,
-            input=prompt,
-        )
+        resp = client.responses.create(model=used_model, input=prompt)
+
         output_text = (getattr(resp, "output_text", None) or "").strip()
         if not output_text:
-            # fallback si SDK change : tenter extraction simple
             output_text = str(resp).strip()
 
-        data = _safe_parse_json(output_text)
-        raw_suggestions = data.get("suggestions", [])
-        if not isinstance(raw_suggestions, list):
-            raise ModuleError("AI JSON: 'suggestions' must be a list")
+        try:
+            data = _safe_parse_json(output_text)
+        except Exception as e:
+            log.warning(f"AI returned invalid JSON -> fallback [] ({e})")
+            return []
+
+        raw = data.get("suggestions", [])
+        if not isinstance(raw, list):
+            log.warning("AI JSON invalid: 'suggestions' is not a list -> fallback []")
+            return []
 
         out: List[Suggestion] = []
-        for s in raw_suggestions[: max_suggestions]:
-            if not isinstance(s, dict):
+        for item in raw[:max_suggestions]:
+            if not isinstance(item, dict):
                 continue
-            msg = (s.get("message") or "").strip()
+            msg = (item.get("message") or "").strip()
             if not msg:
                 continue
-            rationale = (s.get("rationale") or "").strip()
-            conf = s.get("confidence", None)
-            out.append(
-                Suggestion(
-                    source=SuggestionSource.AI,
-                    message=msg,
-                    rule_id="AI-001",
-                    rationale=rationale,
-                    confidence=conf if isinstance(conf, (int, float)) else None,
-                )
+            rationale = (item.get("rationale") or "").strip()
+            conf = item.get("confidence", None)
+
+            suggestion = Suggestion(
+                source=SuggestionSource.AI,
+                message=msg,
+                rule_id="AI-001",
+                rationale=rationale,
+                confidence=conf if isinstance(conf, (int, float)) else None,
             )
+            out.append(suggestion)
+
         return out
 
-    except ModuleError:
-        raise
     except Exception as e:
-        # Fallback contrôlé : pas de crash
         log.warning(f"AI call failed -> fallback [] ({e})")
         return []
+

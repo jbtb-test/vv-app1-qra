@@ -17,7 +17,7 @@ L’objectif de la version **1.9.2** est :
 - sans dépendance forte à la disponibilité de l’IA.
 
 ## Architecture
-
+
 ### Vue globale du repo
 ```text
 vv-app1-qra/
@@ -25,9 +25,9 @@ vv-app1-qra/
 │ └─ vv_app1_qra/
 │ ├─ main.py # Point d’entrée CLI
 │ ├─ ia_assistant.py # Suggestions IA (optionnelles)
-│ ├─ rules_engine.py # Règles déterministes V&V
+│ ├─ rules.py # Règles déterministes V&V
 │ ├─ models.py # Modèles métier (Requirement, Issue…)
-│ └─ exporters.py # Exports CSV / HTML
+│ └─ report.py # Exports CSV / HTML
 │
 ├─ data/
 │ ├─ inputs/

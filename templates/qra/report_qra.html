@@ -2,41 +2,66 @@
 
 {% block content %}
 
-<h2>Décision qualité globale</h2>
-<p>
-  <strong>Score global :</strong> {{ global_score }} /
-  <strong>Statut :</strong>
-  <span class="{% if global_status == 'OK' %}ok{% elif global_status == 'À risque' %}risk{% else %}ko{% endif %}">
-    {{ global_status }}
-  </span>
-</p>
+<div class="card">
+  <h2>Décision qualité globale</h2>
+  <p>
+    <strong>Score global :</strong> {{ global_score }} /
+    <strong>Statut :</strong>
+    {% if global_status == 'OK' %}
+      <span class="pill ok">OK</span>
+    {% elif global_status == 'À risque' %}
+      <span class="pill risk">À risque</span>
+    {% else %}
+      <span class="pill ko">{{ global_status }}</span>
+    {% endif %}
+  </p>
 
-<hr/>
+  {% if suggestions_label %}
+    <p class="muted small">
+      <strong>Mode suggestions :</strong> <span class="pill info">{{ suggestions_label }}</span>
+      {% if ai_enabled is defined %}
+        {% if ai_enabled %}
+          <span class="muted">— IA activée</span>
+        {% else %}
+          <span class="muted">— IA désactivée</span>
+        {% endif %}
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
 
 <h2>Vue synthèse</h2>
 
 <table>
   <thead>
     <tr>
-      <th>ID</th>
-      <th>Score</th>
+      <th class="col-id">ID</th>
+      <th class="col-score">Score</th>
       <th>Statut</th>
-      <th>Issues</th>
-      <th>IA</th>
+      <th class="col-center">Issues</th>
+      <th class="col-center">Suggestions</th>
     </tr>
   </thead>
   <tbody>
     {% for r in requirements %}
     <tr>
-      <td>{{ r.id }}</td>
-      <td>{{ r.score }}</td>
-      <td>{{ r.display_status }}</td>
-      <td>{{ r.issues|length }}</td>
+      <td class="col-id mono">{{ r.id }}</td>
+      <td class="col-score"><strong>{{ r.score }}</strong></td>
       <td>
-        {% if r.ai_suggestions %}
-          <span class="badge">AI</span>
+        {% if r.display_status == 'OK' %}
+          <span class="pill ok">OK</span>
+        {% elif r.display_status == 'À risque' %}
+          <span class="pill risk">À risque</span>
         {% else %}
-          —
+          <span class="pill ko">{{ r.display_status }}</span>
+        {% endif %}
+      </td>
+      <td class="col-center">{{ r.issues|length }}</td>
+      <td class="col-center">
+        {% if r.ai_suggestions %}
+          <span class="pill info">{{ suggestions_label }}</span>
+        {% else %}
+          <span class="muted">—</span>
         {% endif %}
       </td>
     </tr>
@@ -44,13 +69,11 @@
   </tbody>
 </table>
 
-<hr/>
-
 <h2>Détails par exigence</h2>
 
 {% for r in requirements %}
-<details style="margin-bottom: 12px;">
-  <summary>{{ r.id }} — Score {{ r.score }} — {{ r.display_status }}</summary>
+<details>
+  <summary><span class="mono">{{ r.id }}</span> — Score <strong>{{ r.score }}</strong> — {{ r.display_status }}</summary>
 
   <p><strong>Texte exigence :</strong></p>
   <p>{{ r.text }}</p>
@@ -59,20 +82,26 @@
   {% if r.issues %}
     <ul>
       {% for issue in r.issues %}
-        <li>[{{ issue.severity }}] {{ issue.message }}</li>
+        <li>
+          <span class="pill {% if issue.severity in ['CRITICAL'] %}ko{% elif issue.severity in ['MAJOR','MINOR'] %}risk{% else %}info{% endif %}">
+            {{ issue.severity }}
+          </span>
+          <span class="muted">—</span>
+          {{ issue.message }}
+        </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p>Aucune issue détectée.</p>
+    <p class="muted">Aucune issue détectée.</p>
   {% endif %}
 
   {% if r.ai_suggestions %}
-  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
-  <ul>
-    {% for s in r.ai_suggestions %}
-      <li>{{ s }}</li>
-    {% endfor %}
-  </ul>
+    <p><strong>Suggestions {{ suggestions_label }} :</strong> <span class="pill info">{{ suggestions_label }}</span></p>
+    <ul>
+      {% for s in r.ai_suggestions %}
+        <li>{{ s }}</li>
+      {% endfor %}
+    </ul>
   {% endif %}
 </details>
 {% endfor %}

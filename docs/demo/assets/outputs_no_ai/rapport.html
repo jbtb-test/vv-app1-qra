@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Quality Risk Assessment — Rapport</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root{
+            --fg:#1f2937;
+            --muted:#6b7280;
+            --bg:#ffffff;
+            --page:#f5f7fa;
+            --line:#e5e7eb;
+            --zebra:#f9fafb;
+            --head:#eef2f7;
+
+            --ok:#16a34a;
+            --risk:#b45309;
+            --ko:#dc2626;
+            --info:#2563eb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body{
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 18px;
+            background: var(--page);
+            color: var(--fg);
+        }
+
+        .container{
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header{
+            font-size: 20px;
+            font-weight: 800;
+            padding: 14px 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .header-left{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+        .header-title{ font-size: 20px; }
+        .header-subtitle{ color: var(--muted); font-weight: 500; font-size: 12px; }
+
+        .badge{
+            display:inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: var(--head);
+            border: 1px solid var(--line);
+            color: var(--fg);
+            white-space: nowrap;
+        }
+
+        .pill{
+            display:inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid var(--line);
+            background: var(--head);
+            white-space: nowrap;
+        }
+        .ok{ color: var(--ok); }
+        .risk{ color: var(--risk); }
+        .ko{ color: var(--ko); }
+        .pill.ok{ border-color:#bbf7d0; background:#ecfdf5; color: var(--ok); }
+        .pill.risk{ border-color:#fde68a; background:#fffbeb; color: #92400e; }
+        .pill.ko{ border-color:#fecaca; background:#fef2f2; color: var(--ko); }
+        .pill.info{ border-color:#bfdbfe; background:#eff6ff; color: var(--info); }
+
+        h2{
+            font-size: 16px;
+            margin: 18px 0 10px;
+        }
+
+        .card{
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            padding: 12px 14px;
+            margin: 12px 0;
+        }
+
+        .muted{ color: var(--muted); }
+        .small{ font-size: 12px; }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+        hr{
+            border: none;
+            border-top: 1px solid var(--line);
+            margin: 14px 0;
+        }
+
+        /* Tables */
+        table{
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        thead th{
+            background: var(--head);
+            color: var(--muted);
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: bottom;
+        }
+
+        tbody td{
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+
+        tbody tr:nth-child(even){ background: var(--zebra); }
+        tbody tr:hover{ background: #eef2ff; }
+
+        .col-id{ white-space: nowrap; width: 1%; }
+        .col-score{ white-space: nowrap; width: 1%; text-align: right; }
+        .col-center{ white-space: nowrap; width: 1%; text-align: center; }
+
+        /* Details blocks */
+        details{
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            padding: 10px 12px;
+            margin: 10px 0;
+        }
+        summary{
+            cursor: pointer;
+            font-weight: 800;
+        }
+        ul{ margin: 8px 0 0; padding-left: 18px; }
+        li{ margin: 6px 0; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <div class="header-left">
+        <div class="header-title">Quality Risk Assessment — Outil V&amp;V</div>
+        
+          <div class="header-subtitle">Mode suggestions : RULES</div>
+        
+    </div>
+
+    
+      <span class="badge">2026-01-12 13:55</span>
+    
+</header>
+
+
+
+<div class="card">
+  <h2>Décision qualité globale</h2>
+  <p>
+    <strong>Score global :</strong> 90.0 /
+    <strong>Statut :</strong>
+    
+      <span class="pill risk">À risque</span>
+    
+  </p>
+
+  
+    <p class="muted small">
+      <strong>Mode suggestions :</strong> <span class="pill info">RULES</span>
+      
+        
+          <span class="muted">— IA désactivée</span>
+        
+      
+    </p>
+  
+</div>
+
+<h2>Vue synthèse</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th class="col-id">ID</th>
+      <th class="col-score">Score</th>
+      <th>Statut</th>
+      <th class="col-center">Issues</th>
+      <th class="col-center">Suggestions</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+    <tr>
+      <td class="col-id mono">REQ-001</td>
+      <td class="col-score"><strong>100</strong></td>
+      <td>
+        
+          <span class="pill ok">OK</span>
+        
+      </td>
+      <td class="col-center">0</td>
+      <td class="col-center">
+        
+          <span class="muted">—</span>
+        
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="col-id mono">REQ-002</td>
+      <td class="col-score"><strong>70</strong></td>
+      <td>
+        
+          <span class="pill risk">À risque</span>
+        
+      </td>
+      <td class="col-center">3</td>
+      <td class="col-center">
+        
+          <span class="pill info">RULES</span>
+        
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="col-id mono">REQ-003</td>
+      <td class="col-score"><strong>100</strong></td>
+      <td>
+        
+          <span class="pill ok">OK</span>
+        
+      </td>
+      <td class="col-center">0</td>
+      <td class="col-center">
+        
+          <span class="muted">—</span>
+        
+      </td>
+    </tr>
+    
+    <tr>
+      <td class="col-id mono">REQ-004</td>
+      <td class="col-score"><strong>90</strong></td>
+      <td>
+        
+          <span class="pill risk">À risque</span>
+        
+      </td>
+      <td class="col-center">1</td>
+      <td class="col-center">
+        
+          <span class="pill info">RULES</span>
+        
+      </td>
+    </tr>
+    
+  </tbody>
+</table>
+
+<h2>Détails par exigence</h2>
+
+
+<details>
+  <summary><span class="mono">REQ-001</span> — Score <strong>100</strong> — OK</summary>
+
+  <p><strong>Texte exigence :</strong></p>
+  <p>The braking system shall stop the train within 800 m when the emergency brake is applied at 160 km/h on dry track.</p>
+
+  <p><strong>Issues détectées :</strong></p>
+  
+    <p class="muted">Aucune issue détectée.</p>
+  
+
+  
+</details>
+
+<details>
+  <summary><span class="mono">REQ-002</span> — Score <strong>70</strong> — À risque</summary>
+
+  <p><strong>Texte exigence :</strong></p>
+  <p>The HMI should display the status quickly and clearly for the driver.</p>
+
+  <p><strong>Issues détectées :</strong></p>
+  
+    <ul>
+      
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Modal verb &#39;should&#39; detected (weak commitment). Prefer &#39;shall&#39; or measurable phrasing.
+        </li>
+      
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Ambiguous term &#39;quick&#39; detected (not measurable).
+        </li>
+      
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Acceptance criteria missing (verification might be unclear).
+        </li>
+      
+    </ul>
+  
+
+  
+    <p><strong>Suggestions RULES :</strong> <span class="pill info">RULES</span></p>
+    <ul>
+      
+        <li>Remplacer les modaux faibles (should/may/…) par une formulation normative mesurable (shall + métriques).</li>
+      
+        <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
+      
+        <li>Ajouter des critères d’acceptation concrets (Given/When/Then, seuils, tolérances).</li>
+      
+    </ul>
+  
+</details>
+
+<details>
+  <summary><span class="mono">REQ-003</span> — Score <strong>100</strong> — OK</summary>
+
+  <p><strong>Texte exigence :</strong></p>
+  <p>The infusion pump shall deliver 5 mL/h ± 5% for flow rates between 1 mL/h and 10 mL/h at 23°C with saline.</p>
+
+  <p><strong>Issues détectées :</strong></p>
+  
+    <p class="muted">Aucune issue détectée.</p>
+  
+
+  
+</details>
+
+<details>
+  <summary><span class="mono">REQ-004</span> — Score <strong>90</strong> — À risque</summary>
+
+  <p><strong>Texte exigence :</strong></p>
+  <p>The ECU shall provide diagnostic information if needed.</p>
+
+  <p><strong>Issues détectées :</strong></p>
+  
+    <ul>
+      
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Ambiguous term &#39;if needed&#39; detected (not measurable).
+        </li>
+      
+    </ul>
+  
+
+  
+    <p><strong>Suggestions RULES :</strong> <span class="pill info">RULES</span></p>
+    <ul>
+      
+        <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
+      
+    </ul>
+  
+</details>
+
+
+
+
+</div>
+</body>
+</html>

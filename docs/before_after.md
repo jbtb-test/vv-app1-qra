@@ -1,68 +1,81 @@
 # Avant / Après — Revue qualité des exigences
 
-Ce document compare une **revue d’exigences manuelle classique** avec une
-**revue outillée via APP1 QRA**, avec IA optionnelle et non décisionnelle.
+Ce document compare une **revue d’exigences manuelle classique**
+avec une **revue outillée via APP1 QRA**.
 
-L’objectif est d’illustrer le **gain réel**, les **limites**, et la **maîtrise humaine conservée**.
+L’objectif est d’illustrer :
+- les **gains concrets**
+- les **limites assumées**
+- la **maîtrise humaine conservée**
 
+> Démo consultable : voir `docs/demo/README.md`
 ---
 
 ## Avant — Revue manuelle classique
 
 ### Processus typique
-1. Lecture manuelle des exigences (DOORS / Polarion)
-2. Identification des défauts à l’expérience
-3. Commentaires libres ou annotations
-4. Synthèse souvent orale ou non structurée
+
+1. Consultation des exigences dans un outil (DOORS, Polarion)
+2. Lecture individuelle ou en séance de revue
+3. Détection des défauts basée sur l’expérience
+4. Commentaires libres (outil, Excel, mail)
+5. Synthèse variable selon les projets
 
 ### Avantages
-- Expertise humaine complète
-- Compréhension métier fine
-- Adaptation au contexte projet
 
-### Limites
-- ⏱️ Chronophage (volume élevé)
-- ❌ Détection hétérogène selon les relecteurs
-- ❌ Défauts récurrents parfois oubliés
-- ❌ Peu de traçabilité formelle
-- ❌ Difficile à démontrer rapidement (entretien / audit)
+- Expertise humaine complète
+- Compréhension métier et projet fine
+- Capacité d’arbitrage contextuel
+
+### Limites observées
+
+- ⏱️ Revue longue sur des volumes importants
+- ❌ Variabilité forte entre relecteurs
+- ❌ Défauts récurrents parfois non détectés
+- ❌ Traçabilité hétérogène
+- ❌ Démonstration difficile en audit ou entretien
 
 ---
 
 ## Après — Revue outillée avec APP1 QRA
 
 ### Processus outillé
-1. Export CSV des exigences
-2. Lancement du pipeline QRA
-3. Analyse déterministe automatique
-4. (Optionnel) Suggestions IA
-5. Génération d’outputs (CSV + HTML)
-6. Revue humaine finale
 
-### Avantages
-- ⚡ Gain de temps immédiat
-- ✔️ Détection systématique des défauts courants
+1. Export CSV des exigences
+2. Exécution locale du pipeline APP1 QRA
+3. Application de règles qualité **déterministes**
+4. (Optionnel) Suggestions IA non décisionnelles
+5. Génération d’outputs structurés (CSV + HTML)
+6. Revue humaine finale et décision
+
+### Avantages concrets
+
+- ⚡ Réduction immédiate du temps de revue
+- ✔️ Détection systématique des défauts standards
 - ✔️ Règles explicites, testées et traçables
-- ✔️ Résultats structurés et démontrables
-- ✔️ Support clair pour discussion technique
+- ✔️ Résultats reproductibles
+- ✔️ Support clair pour revue, audit ou entretien
 
 ### Limites maîtrisées
-- Ne remplace pas l’expertise humaine
-- Ne couvre pas le contexte métier complexe
-- L’IA ne prend aucune décision
+
+- Ne remplace pas l’analyse métier
+- Ne couvre pas les décisions de conception
+- Ne prend aucune décision automatique
 
 ---
 
 ## Rôle de l’IA (optionnelle)
-
 - Désactivée par défaut
-- Fournit uniquement des **suggestions textuelles**
-- Aucun impact sur :
-  - détection déterministe
-  - scoring
-  - décision finale
+- Fournit uniquement :
+  - des suggestions de reformulation
+  - des pistes d’amélioration
 
-👉 L’IA est un **assistant**, pas un arbitre.
+L’IA :
+- n’ajoute pas d’issues
+- ne modifie pas les résultats
+- n’influence pas la décision finale
+
+👉 Elle agit comme **assistant**, jamais comme arbitre.
 
 ---
 
@@ -73,7 +86,8 @@ L’objectif est d’illustrer le **gain réel**, les **limites**, et la **maît
 | Temps | Élevé | Réduit |
 | Homogénéité | Variable | Stable |
 | Traçabilité | Faible | Forte |
-| Démonstration | Difficile | Immédiate |
+| Reproductibilité | Faible | Élevée |
+| Démonstration | Complexe | Immédiate |
 | Décision humaine | Oui | Oui |
 | IA décisionnelle | N/A | Non |
 
@@ -82,7 +96,7 @@ L’objectif est d’illustrer le **gain réel**, les **limites**, et la **maît
 ## Conclusion
 
 APP1 QRA ne remplace pas la revue humaine.  
-Il **outille**, **structure** et **sécurise** la revue qualité des exigences.
+Il **structure**, **sécurise** et **accélère** la revue qualité.
 
-👉 L’ingénieur V&V reste **au centre de la décision**.  
-👉 L’outil apporte **efficacité, cohérence et démonstrabilité**.
+👉 L’ingénieur V&V reste **responsable de la décision**  
+👉 L’outil apporte **cohérence, traçabilité et démonstrabilité**

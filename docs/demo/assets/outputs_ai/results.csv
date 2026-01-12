@@ -1,0 +1,5 @@
+id,score,raw_status,display_status,text,issues_count,suggestions_label,suggestions_count
+REQ-001,100,CHECKED,OK,The braking system shall stop the train within 800 m when the emergency brake is applied at 160 km/h on dry track.,0,IA,3
+REQ-002,70,CHECKED,À risque,The HMI should display the status quickly and clearly for the driver.,3,IA,6
+REQ-003,100,CHECKED,OK,The infusion pump shall deliver 5 mL/h ± 5% for flow rates between 1 mL/h and 10 mL/h at 23°C with saline.,0,IA,3
+REQ-004,90,CHECKED,À risque,The ECU shall provide diagnostic information if needed.,1,IA,4

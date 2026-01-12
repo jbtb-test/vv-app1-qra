@@ -5,32 +5,21 @@
 vv_app1_qra.models
 ------------------------------------------------------------
 Description :
-    Modèles de domaine pour APP1 — QRA (Quality Risk Assessment)
-    Étape 1.7 — Modèles
+    Modèles de domaine pour APP1 — QRA (Quality Risk Assessment).
 
 Rôle :
     - Définir les structures de données stables utilisées par :
-        * rules.py (1.8) : création d'Issue
-        * ia_assistant.py (1.9) : création de Suggestion (source=AI)
-        * report.py (1.10) : rendu HTML/CSV depuis AnalysisResult
-    - Fournir sérialisation simple (to_dict / from_dict) pour :
+        * rules.py : création d'Issue / AnalysisResult
+        * ia_assistant.py : création de Suggestion (source=AI)
+        * report.py : rendu HTML/CSV depuis AnalysisResult
+    - Fournir une sérialisation simple (to_dict / from_dict) pour :
         * outputs
         * logs
         * tests
 
-Architecture (repo) :
-    - Code : src/vv_app1_qra/
-    - Tests : tests/
-    - Données : data/
-    - Docs : docs/
-
-Usage :
-    (import)
-    from vv_app1_qra.models import Requirement, Issue, Suggestion, AnalysisResult
-
-Notes :
-    - Pas de dépendance externe (stdlib uniquement).
-    - Modèles "data-only" (pas de logique métier de règles ici).
+Contraintes :
+    - stdlib only
+    - modèles "data-only" (pas de logique métier de règles ici)
 ============================================================
 """
 
@@ -43,14 +32,23 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+# ============================================================
+# 🔎 Public exports
+# ============================================================
+__all__ = [
+    "IssueSeverity",
+    "SuggestionSource",
+    "Requirement",
+    "Issue",
+    "Suggestion",
+    "AnalysisResult",
+]
 
 # ============================================================
 # 🧱 Enums
 # ============================================================
 class IssueSeverity(str, Enum):
-    """
-    Niveau de sévérité (V&V/QA) pour classifier un défaut.
-    """
+    """Niveau de sévérité (V&V/QA) pour classifier un défaut."""
     INFO = "INFO"
     MINOR = "MINOR"
     MAJOR = "MAJOR"
@@ -58,9 +56,7 @@ class IssueSeverity(str, Enum):
 
 
 class SuggestionSource(str, Enum):
-    """
-    Origine d'une suggestion (assistant = propose, humain = décide).
-    """
+    """Origine d'une suggestion (assistant = propose, humain = décide)."""
     RULE = "RULE"
     AI = "AI"
     HUMAN = "HUMAN"
@@ -70,15 +66,14 @@ class SuggestionSource(str, Enum):
 # 🔧 Helpers (validation / mapping)
 # ============================================================
 def _s(v: Any) -> str:
-    """
-    Convertit en str et trim (robuste pour None).
-    """
+    """Convertit en str et trim (robuste pour None)."""
     return ("" if v is None else str(v)).strip()
 
 
 def _enum_from_str(enum_cls: type[Enum], raw: Any, field_name: str) -> Enum:
     """
     Convertit un champ texte en Enum (strict).
+
     Accepte :
       - instance Enum
       - chaîne égalant une valeur (ex: "MAJOR")
@@ -110,9 +105,7 @@ def _enum_from_str(enum_cls: type[Enum], raw: Any, field_name: str) -> Enum:
 # ============================================================
 @dataclass(frozen=True)
 class Requirement:
-    """
-    Exigence d'entrée (proche DOORS/Polarion), normalisée.
-    """
+    """Exigence d'entrée (proche DOORS/Polarion), normalisée."""
     req_id: str
     title: str
     text: str
@@ -184,9 +177,7 @@ class Requirement:
 
 @dataclass(frozen=True)
 class Issue:
-    """
-    Défaut détecté par une règle déterministe (1.8).
-    """
+    """Défaut détecté par une règle déterministe."""
     rule_id: str
     category: str
     severity: IssueSeverity
@@ -210,7 +201,6 @@ class Issue:
             raise ValueError("Issue.category must be non-empty.")
         if not self.message:
             raise ValueError("Issue.message must be non-empty.")
-        # severity est déjà un Enum (ou conversion côté from_dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -241,14 +231,12 @@ class Issue:
 
 @dataclass(frozen=True)
 class Suggestion:
-    """
-    Suggestion (RULE/AI/HUMAN). Non décisionnelle par design.
-    """
+    """Suggestion (RULE/AI/HUMAN). Non décisionnelle par design."""
     source: SuggestionSource
     message: str
 
-    rule_id: str = ""              # si source=RULE
-    rationale: str = ""            # justification courte
+    rule_id: str = ""                 # si source=RULE
+    rationale: str = ""               # justification courte
     confidence: Optional[float] = None  # si AI : score optionnel 0..1
 
     def __post_init__(self) -> None:
@@ -294,14 +282,14 @@ class AnalysisResult:
     Résultat d'analyse pour une exigence :
     - issues = défauts détectés par règles
     - suggestions = propositions (règles/IA/humain)
-    - score/status optionnels (arriveront avec 1.8+)
+    - score/status optionnels
     """
     requirement: Requirement
     issues: List[Issue] = field(default_factory=list)
     suggestions: List[Suggestion] = field(default_factory=list)
 
     score: Optional[int] = None
-    status: str = "LOADED"  # LOADED (1.6) -> CHECKED (1.8) -> SUGGESTED (1.9) -> REPORTED (1.10)
+    status: str = "LOADED"  # LOADED -> CHECKED -> SUGGESTED -> REPORTED
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "status", _s(self.status) or "LOADED")

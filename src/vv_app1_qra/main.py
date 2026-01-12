@@ -529,8 +529,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="vv-app1-qra",
         description=(
-            "APP1 QRA — CLI (MVP 1.6): "
-            "read CSV requirements and generate demo outputs (no AI)."
+            "APP1 QRA — CLI: read requirements CSV, run deterministic rules, "
+            "optionally add AI suggestions (non-blocking), and generate outputs (CSV + HTML reports)."
         ),
     )
 

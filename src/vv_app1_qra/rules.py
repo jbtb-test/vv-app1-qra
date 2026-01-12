@@ -5,27 +5,14 @@
 vv_app1_qra.rules
 ------------------------------------------------------------
 Description :
-    Règles déterministes de qualité d’exigences (APP1 — QRA)
-    Étape 1.8 — Rules (ambiguïté, testabilité, AC)
+    Règles déterministes de qualité d’exigences (APP1 — QRA).
 
 Rôle :
-    - Analyser une Requirement (modèle de domaine) via règles simples
-    - Détecter des défauts (Issue) + produire des suggestions (Suggestion source=RULE)
+    - Analyser une Requirement via règles simples
+    - Produire des défauts (Issue) + suggestions (Suggestion source=RULE)
     - Calculer un score 0..100 + statut CHECKED
 
-Architecture (repo) :
-    - Code : src/vv_app1_qra/
-    - Modèles : src/vv_app1_qra/models.py
-    - Tests : tests/
-
-Usage :
-    from vv_app1_qra.models import Requirement
-    from vv_app1_qra.rules import analyze_requirement
-
-    r = Requirement(req_id="REQ-001", title="...", text="...")
-    result = analyze_requirement(r)
-
-Notes :
+Contraintes :
     - 100% déterministe (stdlib only)
     - Pas d’IA ici
 ============================================================
@@ -39,7 +26,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Iterable, List, Sequence, Tuple
 
 from vv_app1_qra.models import (
     AnalysisResult,
@@ -51,12 +38,25 @@ from vv_app1_qra.models import (
 )
 
 # ============================================================
+# 🔎 Public exports
+# ============================================================
+__all__ = [
+    "AMBIGUOUS_TERMS",
+    "WEAK_MODAL_VERBS",
+    "SEVERITY_PENALTY",
+    "ModuleError",
+    "RuleHit",
+    "compute_score",
+    "analyze_requirement",
+    "analyze_requirements",
+    "get_logger",
+]
+
+# ============================================================
 # 🧾 Logging (local, autonome)
 # ============================================================
 def get_logger(name: str) -> logging.Logger:
-    """
-    Crée un logger simple et stable (stdout), sans dépendance externe.
-    """
+    """Crée un logger simple et stable (stdout), sans dépendance externe."""
     logger = logging.getLogger(name)
     if not logger.handlers:
         handler = logging.StreamHandler()
@@ -104,7 +104,6 @@ AMBIGUOUS_TERMS: Tuple[str, ...] = (
     "maximize",
 )
 
-
 WEAK_MODAL_VERBS: Tuple[str, ...] = (
     "should",
     "may",
@@ -143,14 +142,13 @@ def _compact_ws(s: str) -> str:
 
 
 def _find_terms(text: str, terms: Sequence[str]) -> List[str]:
-    """
-    Retourne la liste des termes trouvés (dédupliqués) dans text (case-insensitive).
-    """
+    """Retourne la liste des termes trouvés (dédupliqués) dans text (case-insensitive)."""
     hay = (text or "").lower()
     found: List[str] = []
     for t in terms:
         if t.lower() in hay:
             found.append(t)
+
     # dédup stable
     out: List[str] = []
     for x in found:
@@ -160,9 +158,7 @@ def _find_terms(text: str, terms: Sequence[str]) -> List[str]:
 
 
 def _first_excerpt(text: str, needle: str, radius: int = 45) -> str:
-    """
-    Construit un extrait court autour du premier match.
-    """
+    """Construit un extrait court autour du premier match."""
     t = text or ""
     low = t.lower()
     n = (needle or "").lower()
@@ -187,9 +183,7 @@ def _mk_issue(hit: RuleHit) -> Issue:
 
 
 def _mk_suggestion_from_issue(issue: Issue) -> Suggestion:
-    """
-    Suggestion RULE directement dérivée de l’issue.
-    """
+    """Suggestion RULE directement dérivée de l’issue."""
     rec = _norm(issue.recommendation)
     if not rec:
         rec = "Clarifier l’exigence et ajouter des critères d’acceptation mesurables."
@@ -206,9 +200,7 @@ def _mk_suggestion_from_issue(issue: Issue) -> Suggestion:
 # 🧠 Règles (MVP)
 # ============================================================
 def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
-    """
-    Détecte termes ambigus (qualitatifs non mesurables) et modaux faibles.
-    """
+    """Détecte termes ambigus (qualitatifs non mesurables) et modaux faibles."""
     text_blob = " ".join([req.title, req.text, req.acceptance_criteria])
     text_blob = _compact_ws(text_blob)
 
@@ -248,9 +240,7 @@ def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
 
 
 def _rule_testability(req: Requirement) -> Iterable[RuleHit]:
-    """
-    Testabilité : besoin d’un 'verification_method' et/ou 'acceptance_criteria'.
-    """
+    """Testabilité : besoin d’un 'verification_method' et/ou 'acceptance_criteria'."""
     vm = _norm(req.verification_method)
     ac = _norm(req.acceptance_criteria)
 
@@ -284,9 +274,7 @@ def _rule_testability(req: Requirement) -> Iterable[RuleHit]:
 
 
 def _rule_acceptance_criteria(req: Requirement) -> Iterable[RuleHit]:
-    """
-    Vérifie la qualité des AC : présence, longueur minimale, absence de termes ambigus.
-    """
+    """Vérifie la qualité des AC : présence, longueur minimale, absence de termes ambigus."""
     ac = _compact_ws(req.acceptance_criteria)
     if not ac:
         return []
@@ -377,7 +365,5 @@ def analyze_requirement(req: Requirement, *, verbose: bool = False) -> AnalysisR
 
 
 def analyze_requirements(reqs: Sequence[Requirement], *, verbose: bool = False) -> List[AnalysisResult]:
-    """
-    Analyse batch (liste d’exigences).
-    """
+    """Analyse batch (liste d’exigences)."""
     return [analyze_requirement(r, verbose=verbose) for r in reqs]

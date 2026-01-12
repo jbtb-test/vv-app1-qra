@@ -7,134 +7,272 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f5f7fa;
-            color: #333;
-        }
-        header {
-            font-size: 22px;
-            font-weight: bold;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #888;
-        }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            background: #e9eef6;
-            border: 1px solid #c9d6ea;
-            color: #234;
-            margin-left: 8px;
-        }
-        .ok { color: #1b7f3c; }
-        .risk { color: #b36b00; }
-        .ko { color: #a61b1b; }
+        :root{
+            --fg:#1f2937;
+            --muted:#6b7280;
+            --bg:#ffffff;
+            --page:#f5f7fa;
+            --line:#e5e7eb;
+            --zebra:#f9fafb;
+            --head:#eef2f7;
 
-        table {
-            border-collapse: collapse;
+            --ok:#16a34a;
+            --risk:#b45309;
+            --ko:#dc2626;
+            --info:#2563eb;
+        }
+
+        * { box-sizing: border-box; }
+
+        body{
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 18px;
+            background: var(--page);
+            color: var(--fg);
+        }
+
+        .container{
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header{
+            font-size: 20px;
+            font-weight: 800;
+            padding: 14px 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .header-left{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+        .header-title{ font-size: 20px; }
+        .header-subtitle{ color: var(--muted); font-weight: 500; font-size: 12px; }
+
+        .badge{
+            display:inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: var(--head);
+            border: 1px solid var(--line);
+            color: var(--fg);
+            white-space: nowrap;
+        }
+
+        .pill{
+            display:inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid var(--line);
+            background: var(--head);
+            white-space: nowrap;
+        }
+        .ok{ color: var(--ok); }
+        .risk{ color: var(--risk); }
+        .ko{ color: var(--ko); }
+        .pill.ok{ border-color:#bbf7d0; background:#ecfdf5; color: var(--ok); }
+        .pill.risk{ border-color:#fde68a; background:#fffbeb; color: #92400e; }
+        .pill.ko{ border-color:#fecaca; background:#fef2f2; color: var(--ko); }
+        .pill.info{ border-color:#bfdbfe; background:#eff6ff; color: var(--info); }
+
+        h2{
+            font-size: 16px;
+            margin: 18px 0 10px;
+        }
+
+        .card{
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            padding: 12px 14px;
+            margin: 12px 0;
+        }
+
+        .muted{ color: var(--muted); }
+        .small{ font-size: 12px; }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+        hr{
+            border: none;
+            border-top: 1px solid var(--line);
+            margin: 14px 0;
+        }
+
+        /* Tables */
+        table{
             width: 100%;
-            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
         }
-        th, td {
-            border: 1px solid #bbb;
-            padding: 6px 8px;
+
+        thead th{
+            background: var(--head);
+            color: var(--muted);
+            font-weight: 700;
             text-align: left;
+            padding: 10px 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: bottom;
         }
-        th {
-            background: #e9eef6;
+
+        tbody td{
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
         }
-        summary {
+
+        tbody tr:nth-child(even){ background: var(--zebra); }
+        tbody tr:hover{ background: #eef2ff; }
+
+        .col-id{ white-space: nowrap; width: 1%; }
+        .col-score{ white-space: nowrap; width: 1%; text-align: right; }
+        .col-center{ white-space: nowrap; width: 1%; text-align: center; }
+
+        /* Details blocks */
+        details{
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--bg);
+            padding: 10px 12px;
+            margin: 10px 0;
+        }
+        summary{
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 800;
         }
+        ul{ margin: 8px 0 0; padding-left: 18px; }
+        li{ margin: 6px 0; }
     </style>
 </head>
 
 <body>
+<div class="container">
 
 <header>
-    Quality Risk Assessment — Outil V&amp;V
+    <div class="header-left">
+        <div class="header-title">Quality Risk Assessment — Outil V&amp;V</div>
+        
+          <div class="header-subtitle">Mode suggestions : IA</div>
+        
+    </div>
+
     
-      <span class="badge">2026-01-12 12:28</span>
+      <span class="badge">2026-01-12 14:00</span>
     
 </header>
 
 
 
-<h2>Décision qualité globale</h2>
-<p>
-  <strong>Score global :</strong> 90.0 /
-  <strong>Statut :</strong>
-  <span class="risk">
-    À risque
-  </span>
-</p>
+<div class="card">
+  <h2>Décision qualité globale</h2>
+  <p>
+    <strong>Score global :</strong> 90.0 /
+    <strong>Statut :</strong>
+    
+      <span class="pill risk">À risque</span>
+    
+  </p>
 
-<hr/>
+  
+    <p class="muted small">
+      <strong>Mode suggestions :</strong> <span class="pill info">IA</span>
+      
+        
+          <span class="muted">— IA activée</span>
+        
+      
+    </p>
+  
+</div>
 
 <h2>Vue synthèse</h2>
 
 <table>
   <thead>
     <tr>
-      <th>ID</th>
-      <th>Score</th>
+      <th class="col-id">ID</th>
+      <th class="col-score">Score</th>
       <th>Statut</th>
-      <th>Issues</th>
-      <th>IA</th>
+      <th class="col-center">Issues</th>
+      <th class="col-center">Suggestions</th>
     </tr>
   </thead>
   <tbody>
     
     <tr>
-      <td>REQ-001</td>
-      <td>100</td>
-      <td>OK</td>
-      <td>0</td>
+      <td class="col-id mono">REQ-001</td>
+      <td class="col-score"><strong>100</strong></td>
       <td>
         
-          <span class="badge">AI</span>
+          <span class="pill ok">OK</span>
+        
+      </td>
+      <td class="col-center">0</td>
+      <td class="col-center">
+        
+          <span class="pill info">IA</span>
         
       </td>
     </tr>
     
     <tr>
-      <td>REQ-002</td>
-      <td>70</td>
-      <td>À risque</td>
-      <td>3</td>
+      <td class="col-id mono">REQ-002</td>
+      <td class="col-score"><strong>70</strong></td>
       <td>
         
-          <span class="badge">AI</span>
+          <span class="pill risk">À risque</span>
+        
+      </td>
+      <td class="col-center">3</td>
+      <td class="col-center">
+        
+          <span class="pill info">IA</span>
         
       </td>
     </tr>
     
     <tr>
-      <td>REQ-003</td>
-      <td>100</td>
-      <td>OK</td>
-      <td>0</td>
+      <td class="col-id mono">REQ-003</td>
+      <td class="col-score"><strong>100</strong></td>
       <td>
         
-          <span class="badge">AI</span>
+          <span class="pill ok">OK</span>
+        
+      </td>
+      <td class="col-center">0</td>
+      <td class="col-center">
+        
+          <span class="pill info">IA</span>
         
       </td>
     </tr>
     
     <tr>
-      <td>REQ-004</td>
-      <td>90</td>
-      <td>À risque</td>
-      <td>1</td>
+      <td class="col-id mono">REQ-004</td>
+      <td class="col-score"><strong>90</strong></td>
       <td>
         
-          <span class="badge">AI</span>
+          <span class="pill risk">À risque</span>
+        
+      </td>
+      <td class="col-center">1</td>
+      <td class="col-center">
+        
+          <span class="pill info">IA</span>
         
       </td>
     </tr>
@@ -142,38 +280,36 @@
   </tbody>
 </table>
 
-<hr/>
-
 <h2>Détails par exigence</h2>
 
 
-<details style="margin-bottom: 12px;">
-  <summary>REQ-001 — Score 100 — OK</summary>
+<details>
+  <summary><span class="mono">REQ-001</span> — Score <strong>100</strong> — OK</summary>
 
   <p><strong>Texte exigence :</strong></p>
   <p>The braking system shall stop the train within 800 m when the emergency brake is applied at 160 km/h on dry track.</p>
 
   <p><strong>Issues détectées :</strong></p>
   
-    <p>Aucune issue détectée.</p>
+    <p class="muted">Aucune issue détectée.</p>
   
 
   
-  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
-  <ul>
-    
-      <li>Requirement: At maximum operating mass on straight, level, dry track (adhesion µ ≥ 0.25), when an emergency brake command is issued at 160 km/h ±1 km/h, the train shall reach 0 km/h within 800 m measured from command (t0) to stop.</li>
-    
-      <li>Acceptance criteria: 20 runs under stated conditions; in each run stopping distance ≤ 800 m; initial speed 160 ±1 km/h; distance measured by calibrated odometry (±2 m) from brake command to v=0.</li>
-    
-      <li>Acceptance criteria (environment): Track gradient ±0.1%, straight track (radius ≥ 5 km), wind ≤ 5 m/s, no precipitation for ≥ 2 h, railhead dry verified with adhesion test µ ≥ 0.25.</li>
-    
-  </ul>
+    <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
+    <ul>
+      
+        <li>Requirement: Stop a train at maximum operating mass from 160.0 km/h (±0.5 km/h) to 0 km/h within 800 m on straight, level track (|gradient| ≤ 1‰, curve radius ≥ 3000 m) with wheel–rail adhesion μ ≥ 0.25.</li>
+      
+        <li>Acceptance: Start distance at emergency brake command; stopping condition = speed ≤ 0.5 km/h sustained for ≥2 s; distance measured with calibrated odometry/GNSS (total error ≤ ±2 m); each of 10 valid runs ≤ 800 m.</li>
+      
+        <li>Acceptance setup: Ambient 5–35°C, wind ≤ 5 m/s, dry rail verified by adhesion μ ≥ 0.25 pre-test, brake system nominal (no faults), train mass = maximum operating mass ±1%.</li>
+      
+    </ul>
   
 </details>
 
-<details style="margin-bottom: 12px;">
-  <summary>REQ-002 — Score 70 — À risque</summary>
+<details>
+  <summary><span class="mono">REQ-002</span> — Score <strong>70</strong> — À risque</summary>
 
   <p><strong>Texte exigence :</strong></p>
   <p>The HMI should display the status quickly and clearly for the driver.</p>
@@ -182,62 +318,80 @@
   
     <ul>
       
-        <li>[MINOR] Modal verb &#39;should&#39; detected (weak commitment). Prefer &#39;shall&#39; or measurable phrasing.</li>
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Modal verb &#39;should&#39; detected (weak commitment). Prefer &#39;shall&#39; or measurable phrasing.
+        </li>
       
-        <li>[MINOR] Ambiguous term &#39;quick&#39; detected (not measurable).</li>
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Ambiguous term &#39;quick&#39; detected (not measurable).
+        </li>
       
-        <li>[MINOR] Acceptance criteria missing (verification might be unclear).</li>
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Acceptance criteria missing (verification might be unclear).
+        </li>
       
     </ul>
   
 
   
-  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
-  <ul>
-    
-      <li>Remplacer les modaux faibles (should/may/…) par une formulation normative mesurable (shall + métriques).</li>
-    
-      <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
-    
-      <li>Ajouter des critères d’acceptation concrets (Given/When/Then, seuils, tolérances).</li>
-    
-      <li>Rewrite requirement: &#39;The HMI shall display the current train status within 1.0 s of receiving a status change event.&#39;</li>
-    
-      <li>Add requirement: &#39;The train status indicator shall be persistently visible on all HMI screens, in the top-right quadrant, with text height ≥ 6 mm and contrast ratio ≥ 7:1.&#39;</li>
-    
-      <li>Add acceptance criteria (Inspection): AC1: Status indicator present on all screens; AC2: Update latency ≤ 1.0 s (observed with stopwatch/video); AC3: Text height ≥ 6 mm; AC4: Contrast ratio ≥ 7:1; AC5: Status shown by both text and icon.</li>
-    
-  </ul>
+    <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
+    <ul>
+      
+        <li>Remplacer les modaux faibles (should/may/…) par une formulation normative mesurable (shall + métriques).</li>
+      
+        <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
+      
+        <li>Ajouter des critères d’acceptation concrets (Given/When/Then, seuils, tolérances).</li>
+      
+        <li>The HMI shall update the displayed train status within 1.0 s after receiving a status change from the control system.</li>
+      
+        <li>The HMI shall present status information with text x-height ≥ 6 mm, icons ≥ 10 mm, and foreground/background luminance contrast ratio ≥ 7:1 at the installed display.</li>
+      
+        <li>Acceptance criteria: For 100 status changes, ≥95% of updates appear within 0.5 s and none exceed 1.0 s; measured text x-height ≥ 6 mm; icon size ≥ 10 mm; contrast ratio ≥ 7:1; each status includes a non-color cue (text or icon).</li>
+      
+    </ul>
   
 </details>
 
-<details style="margin-bottom: 12px;">
-  <summary>REQ-003 — Score 100 — OK</summary>
+<details>
+  <summary><span class="mono">REQ-003</span> — Score <strong>100</strong> — OK</summary>
 
   <p><strong>Texte exigence :</strong></p>
   <p>The infusion pump shall deliver 5 mL/h ± 5% for flow rates between 1 mL/h and 10 mL/h at 23°C with saline.</p>
 
   <p><strong>Issues détectées :</strong></p>
   
-    <p>Aucune issue détectée.</p>
+    <p class="muted">Aucune issue détectée.</p>
   
 
   
-  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
-  <ul>
-    
-      <li>Revise requirement: For setpoints {1, 3, 5, 7, 10} mL/h at 23°C ±2°C with 0.9% saline, the average delivered volume over 60 min shall be within ±5% of the setpoint.</li>
-    
-      <li>Acceptance criteria: Measure gravimetrically (balance resolution ≤0.01 g, uncertainty ≤0.5%, NIST-traceable); convert using saline density 1.004 g/mL at 23°C; exclude first 5 min stabilization; sample ≥1 Hz.</li>
-    
-      <li>Acceptance criteria: Verify at downstream backpressure 100 ±10 mmHg using a 180 cm PVC infusion set; bag height adjusted for 0 cm head relative to pump outlet; ambient 23°C ±2°C, RH 30–70%.</li>
-    
-  </ul>
+    <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
+    <ul>
+      
+        <li>Reword requirement: For any setpoint S in 1–10 mL/h, delivered flow averaged over 60 min shall be within ±5% of S at 23°C ±2°C using 0.9% saline and outlet backpressure 100 mmHg ±10 mmHg.</li>
+      
+        <li>Acceptance criteria: Test S ∈ {1, 5, 10} mL/h; after ≤10 min stabilization, the 60‑min average is within ±5% of S and each contiguous 10‑min interval average is within ±10%.</li>
+      
+        <li>Acceptance criteria: Measure gravimetrically using a calibrated balance (resolution ≤0.01 g, uncertainty ≤0.02 g) with sealed collector; convert mass to volume using saline density 1.003 g/mL at 23°C ±1°C.</li>
+      
+    </ul>
   
 </details>
 
-<details style="margin-bottom: 12px;">
-  <summary>REQ-004 — Score 90 — À risque</summary>
+<details>
+  <summary><span class="mono">REQ-004</span> — Score <strong>90</strong> — À risque</summary>
 
   <p><strong>Texte exigence :</strong></p>
   <p>The ECU shall provide diagnostic information if needed.</p>
@@ -246,29 +400,36 @@
   
     <ul>
       
-        <li>[MINOR] Ambiguous term &#39;if needed&#39; detected (not measurable).</li>
+        <li>
+          <span class="pill risk">
+            MINOR
+          </span>
+          <span class="muted">—</span>
+          Ambiguous term &#39;if needed&#39; detected (not measurable).
+        </li>
       
     </ul>
   
 
   
-  <p><strong>Suggestions IA :</strong> <span class="badge">AI</span></p>
-  <ul>
-    
-      <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
-    
-      <li>Rewrite requirement: &#39;Upon receiving a diagnostic request via the diagnostic interface, the ECU shall return diagnostic information within 100 ms.&#39;</li>
-    
-      <li>Add requirement: &#39;When a DTC is set or cleared, the ECU shall store diagnostic information within 10 ms and retain at least 10 records across power cycles.&#39;</li>
-    
-      <li>Augment acceptance criteria: &#39;Across 100 consecutive diagnostic requests at 10 Hz, each response includes the DTC code, timestamp (≥1 ms resolution), and current operating mode, with response time ≤100 ms and 100% success.&#39;</li>
-    
-  </ul>
+    <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
+    <ul>
+      
+        <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
+      
+        <li>Rewrite requirement: The ECU shall provide diagnostic information upon receiving a diagnostic read request from an external tester on the vehicle network.</li>
+      
+        <li>Add acceptance criterion: The ECU shall transmit the diagnostic information within 500 ms of request receipt.</li>
+      
+        <li>Rewrite requirement: Upon setting a new DTC, the ECU shall store the diagnostic information (DTC code, timestamp, operating mode) and make it available for subsequent diagnostic reads.</li>
+      
+    </ul>
   
 </details>
 
 
 
 
+</div>
 </body>
 </html>

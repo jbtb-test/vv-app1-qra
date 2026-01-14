@@ -16,6 +16,8 @@ L’objectif de la version **1.9.2** est :
 - sans jamais remettre en cause les règles déterministes,
 - sans dépendance forte à la disponibilité de l’IA.
 
+---
+
 ## Architecture
 
 ### Vue globale du repo
@@ -76,6 +78,8 @@ L’IA :
 - n’altère jamais le score,
 - n’altère jamais le statut,
 - ajoute uniquement des **suggestions textuelles**.
+
+---
 
 ## Détail des CAS (0 → 4)
 
@@ -177,11 +181,14 @@ Résultat
 
 **Variables**
 - ENABLE_AI=1
-- OPENAI_API_KEY=sk-INVALID
+- OPENAI_API_KEY=DUMMY_INVALID_KEY
 
 **Commandes (PowerShell)**
 ```powershell
-$env:ENABLE_AI="1"; $env:OPENAI_API_KEY="sk-INVALID"; python -m vv_app1_qra.main --verbose
+. .\tools\load_env_secret.ps1
+$env:ENABLE_AI="1"
+$env:OPENAI_API_KEY="DUMMY_INVALID_KEY"
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ```
 
 Comportement
@@ -194,6 +201,8 @@ Résultat
 - Aucun crash
 - Outputs générés
 - Pas de suggestions AI
+
+---
 
 ## Variables d’environnement
 
@@ -209,6 +218,8 @@ Règles
 - ENABLE_AI=1 + clé absente → fallback
 - ENABLE_AI=1 + clé invalide → fallback
 - La clé n’est jamais committée
+
+---
 
 ## Règles de sécurité IA
 
@@ -229,6 +240,8 @@ Principes appliqués :
 4. **IA optionnelle**
 - Désactivable par variable d’environnement
 - Aucun impact sur la CI
+
+---
 
 ## Conclusion
 

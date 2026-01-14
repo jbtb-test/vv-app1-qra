@@ -16,6 +16,8 @@ L’objectif de la version **1.9.2** est :
 - sans jamais remettre en cause les règles déterministes,
 - sans dépendance forte à la disponibilité de l’IA.
 
+---
+
 ## Architecture
 
 ### Vue globale du repo
@@ -76,6 +78,8 @@ L’IA :
 - n’altère jamais le score,
 - n’altère jamais le statut,
 - ajoute uniquement des **suggestions textuelles**.
+
+---
 
 ## Détail des CAS (0 → 4)
 
@@ -195,6 +199,8 @@ Résultat
 - Outputs générés
 - Pas de suggestions AI
 
+---
+
 ## Variables d’environnement
 
 | Variable | Rôle |
@@ -209,6 +215,8 @@ Règles
 - ENABLE_AI=1 + clé absente → fallback
 - ENABLE_AI=1 + clé invalide → fallback
 - La clé n’est jamais committée
+
+---
 
 ## Règles de sécurité IA
 
@@ -229,6 +237,8 @@ Principes appliqués :
 4. **IA optionnelle**
 - Désactivable par variable d’environnement
 - Aucun impact sur la CI
+
+---
 
 ## Conclusion
 

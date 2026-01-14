@@ -9,7 +9,7 @@ But :
 Usage :
   . .\tools\load_env_secret.ps1
   $env:ENABLE_AI="1"
-  python -m vv_app2_tctc.main --out-dir data/outputs --verbose
+  python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ============================================================
 #>
 

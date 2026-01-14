@@ -23,7 +23,7 @@ python -m venv venv
 python -m pip install -U pip
 pip install -e ".[dev]"
 pytest -q
-python -m vv_app2_tctc.main --out-dir data\outputs --verbose
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ```
 
 ## Réactiver la CI (quand la facturation est résolue)

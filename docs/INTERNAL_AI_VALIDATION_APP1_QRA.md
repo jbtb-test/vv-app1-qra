@@ -181,11 +181,14 @@ Résultat
 
 **Variables**
 - ENABLE_AI=1
-- OPENAI_API_KEY=sk-INVALID
+- OPENAI_API_KEY=DUMMY_INVALID_KEY
 
 **Commandes (PowerShell)**
 ```powershell
-$env:ENABLE_AI="1"; $env:OPENAI_API_KEY="sk-INVALID"; python -m vv_app1_qra.main --verbose
+. .\tools\load_env_secret.ps1
+$env:ENABLE_AI="1"
+$env:OPENAI_API_KEY="DUMMY_INVALID_KEY"
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ```
 
 Comportement

@@ -54,10 +54,11 @@ La revue d’exigences est souvent :
 ```bash
 python -m venv venv
 # Windows PowerShell:
-venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
 python -m pip install -U pip
-python -m pip install -e .
-python -m pip install -r requirements.txt
+pip install -e ".[dev]"
+# option IA
+pip install -e ".[dev,ai]"
 ```
 
 ## Tests (CI-friendly)
@@ -90,7 +91,7 @@ Des captures d’écran sont disponibles dans :
 Cette option correspond au mode nominal de l’outil (100 % déterministe).
 
 ```bash
-python -m vv_app1_qra.main --verbose
+python -m vv_app1_qra.main --out-dir data/outputs --verbose
 ```
 
 Génère automatiquement :
@@ -106,9 +107,9 @@ Copier `.env.example` en `.env` et renseigner les valeurs localement.
 
 
 ```powershell
+. .\tools\load_env_secret.ps1
 $env:ENABLE_AI="1"
-$env:OPENAI_API_KEY="your_key_here"
-python -m vv_app1_qra.main --verbose
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ```
 
 > L’IA fournit uniquement des suggestions textuelles.

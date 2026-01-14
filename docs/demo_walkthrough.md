@@ -73,9 +73,8 @@ Résultats générés (runtime)
 
 Cette étape est facultative et ne doit être montrée que si la question est explicitement posée.
 ```powershell
-Activation
+. .\tools\load_env_secret.ps1
 $env:ENABLE_AI="1"
-$env:OPENAI_API_KEY="your_key_here"
 python -m vv_app1_qra.main --verbose
 ```
 

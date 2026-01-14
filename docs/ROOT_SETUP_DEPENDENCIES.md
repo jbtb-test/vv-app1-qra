@@ -20,7 +20,7 @@ Ce socle est conçu pour être répliqué à l’identique sur :
 ### Rôle
 
 `pyproject.toml` est la **référence unique** pour :
-- rendre l’application installable (`pip install -e .`)
+- rendre l’application installable (`pip install -e ".[dev,ai]"`)
 - supporter le layout `src/` sans manipulation de `PYTHONPATH`
 - définir les dépendances **strictement nécessaires au runtime**
 
@@ -33,13 +33,12 @@ Ce socle est conçu pour être répliqué à l’identique sur :
 
 Installation nominale (sans IA) :
 ```bash
-pip install -e .
-Installation avec IA :
+pip install -e ".[dev]"
 ```
 
 Installation avec IA :
 ```bash
-pip install -e ".[ai]"
+pip install -e ".[dev,ai]"
 ```
 
 Intérêt V&V / recruteur
@@ -50,23 +49,18 @@ Intérêt V&V / recruteur
 
 ---
 
-## 2. Dépendances dev/test — requirements.txt
+## 2. Dépendances dev/test — requirements.txt (informatif)
 
 Rôle
-- requirements.txt contient uniquement les dépendances dev / test / outillage :
-- dépendances de développement
-- framework de tests (pytest)
-- dépendances optionnelles testables (openai)
+- `requirements.txt` est un **document informatif** (compatibilité / rappel).
+- La **source de vérité** est `pyproject.toml` (extras `dev` / `ai`).
 
-**Ce fichier ne définit pas le runtime.**
+Règle
+- ✅ Installer via :
+  - `pip install -e ".[dev]"`
+  - `pip install -e ".[dev,ai]"`
+- ❌ Ne pas utiliser l’installation via requirements.txt (ce fichier est informatif uniquement).
 
-Principe
-- pyproject.toml → exécution de l’application
-- requirements.txt → environnement de travail
-Installation :
-```bash
-pip install -r requirements.txt
-```
 
 ---
 
@@ -85,7 +79,7 @@ Utilisations :
 Point d’attention — installation éditable
 Avec :
 ```bash
-pip install -e .
+pip install -e ".[dev,ai]"
 
 pip freeze peut produire :
 -e git+https://...#egg=vv_app1_qra
@@ -100,8 +94,9 @@ pip freeze | Where-Object { $_ -notmatch '^-e\s' } | Set-Content -Encoding utf8 
 
 Règle de gestion
 - informatif uniquement
-- ignoré par Git
+- **versionné** (snapshot reproductibilité)
 - régénérable à tout moment
+
 
 ---
 
@@ -118,7 +113,6 @@ Règles Git
 .env.*
 !.env.example
 ```
-
 
 Résultat
 - .env.example documente les variables attendues
@@ -148,11 +142,13 @@ py -3.14 -m venv venv
 .\venv\Scripts\Activate.ps1
 
 python -m pip install -U pip
-pip install -e .
-pip install -r requirements.txt
+pip install -e ".[dev]"
+# option IA (facultatif)
+pip install -e ".[dev,ai]"
 
 pytest -vv
-python -m vv_app1_qra.main --verbose
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
+
 ```
 
 Résultat attendu
@@ -167,7 +163,7 @@ Résultat attendu
 
 - pyproject.toml : runtime minimal + extras optionnels
 - requirements.txt : dev / test
-- requirements.lock.txt : snapshot, ignoré par Git
+- requirements.lock.txt : snapshot (informativo), versionné pour reproductibilité
 - .env.example versionné, secrets locaux uniquement
 - layout src/
 - installation éditable par défaut

@@ -7,6 +7,27 @@ en amont des activités de test.
 
 ---
 
+## Dois-je exécuter le code pour comprendre la démo ?
+
+Non.
+
+Un **pack démo figé** est fourni dans `docs/demo/` :
+- HTML
+- PNG
+- CSV
+
+Il est **consultable directement sur GitHub**.
+
+---
+
+## Quels livrables sont produits ?
+
+- Rapport HTML de synthèse
+- Exports CSV exploitables
+- (optionnel) Suggestions IA (non décisionnelles)
+
+---
+
 ## L’IA prend-elle des décisions ?
 
 Non.
@@ -48,7 +69,7 @@ Voir `docs/demo/README.md` (pack recruteur) et `docs/demo/assets/outputs_no_ai/r
 
 ## Est-ce un produit industriel ?
 
-Non.
+Ce n’est pas un produit industriel.
 
 C’est un **démonstrateur V&V** destiné à illustrer :
 - une architecture propre

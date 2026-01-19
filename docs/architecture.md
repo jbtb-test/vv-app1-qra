@@ -40,6 +40,7 @@ plutôt que l’optimisation prématurée.
 L’application suit un **pipeline linéaire**, exécutable en ligne de commande,
 inspiré d’une logique V-cycle (outillage, règles testées, résultats vérifiables).
 
+
 ```text
 CSV exigences
      |

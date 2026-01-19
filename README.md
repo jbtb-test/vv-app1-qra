@@ -51,7 +51,7 @@ La revue d’exigences est souvent :
 
 ## Installation (local)
 
-```bash
+```powershell
 python -m venv venv
 # Windows PowerShell:
 .\venv\Scripts\Activate.ps1
@@ -71,6 +71,9 @@ pytest -vv
 ## Quickstart
 
 ### Option A — Démo sans exécution (portfolio)
+
+Cette application fournit un **pack de démonstration figé**, consultable directement sur GitHub,
+sans installer ni exécuter Python.
 
 Démonstration **clé en main pour recruteur**, sans installer ni exécuter Python.
 
@@ -131,3 +134,7 @@ vv-app1-qra/
 └─ README.md
 ```
 
+### Installation
+
+> Les dépendances et environnements sont gérés via `pyproject.toml`.
+> Les fichiers `requirements*.txt` sont fournis à titre informatif et de traçabilité.

@@ -1,71 +1,57 @@
-# Environment Healthcheck Report — APP1 QRA
+# Rapport de contrôle de l’environnement — APP1 QRA
 
-Ce document atteste de l’état de l’environnement
-lors de l’exécution de APP1 — QRA.
+Ce document atteste de l’état de l’environnement technique
+lors de l’exécution de **APP1 — QRA**.
 
 Il est utilisé comme :
-- preuve de reproductibilité locale
-- support Phase 0 (installation / exécution)
-- élément de confiance en entretien ou audit
+- preuve de **reproductibilité locale**
+- support de la **Phase 0** (installation / exécution)
+- élément de **confiance** en entretien ou en audit
 
 ---
 
-## Generated
+## Environnement d’exécution (Runtime)
 
-- Timestamp (UTC): **2026-01-06T12:01:09Z**
-
----
-
-## Runtime
-
-- Python version: **3.14.0**
-- Python executable:  
+- Version Python : **3.14.0**
+- Exécutable Python :  
   `C:\Users\bobby\python_test\vv-project\vv-app1-qra\venv\Scripts\python.exe`
-- Pip version: **25.3**
-- Virtual environment detected: **YES**
-- Venv prefix:  
+- Version pip : **25.3**
+- Environnement virtuel détecté : **OUI**
+- Préfixe venv :  
   `C:\Users\bobby\python_test\vv-project\vv-app1-qra\venv`
 
 ---
 
-## System
+## Projet
 
-- Operating System: **Windows 11**
-- Platform identifier:  
-  `Windows-11-10.0.26200-SP0`
-
----
-
-## Project
-
-- Current working directory:  
+- Répertoire de travail courant (CWD) :  
   `C:\Users\bobby\python_test\vv-project\vv-app1-qra`
-- Project root (auto-detected):  
+- Racine projet (détection automatique) :  
   `C:\Users\bobby\python_test\vv-project\vv-app1-qra`
 
 ---
 
-## Interpretation
+## Interprétation
 
-This report confirms that:
-- Python is correctly installed
-- a virtual environment is active
-- the project root is correctly detected
-- the runtime environment is consistent
+Ce rapport confirme que :
+- Python est correctement installé
+- un environnement virtuel est actif
+- la racine du projet est correctement détectée
+- l’environnement d’exécution est cohérent et maîtrisé
 
 ---
 
 ## Verdict
 
-✅ The environment is considered **HEALTHY**  
-and suitable for:
-- running APP1 QRA
-- executing tests
-- performing a demonstration or audit review
+✅ L’environnement est considéré comme **SAIN (HEALTHY)**  
+et adapté pour :
+- l’exécution de APP1 QRA
+- l’exécution des tests automatisés
+- une démonstration ou un audit technique
 
-This report does **not** validate:
-- business rules correctness
-- data quality
-- functional results
+Ce rapport **ne valide pas** :
+- la correction des règles métier
+- la qualité des données
+- les résultats fonctionnels
 
-It only validates the **execution environment**.
+Il valide uniquement **l’environnement d’exécution**.

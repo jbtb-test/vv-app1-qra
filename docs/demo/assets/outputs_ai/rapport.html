@@ -171,7 +171,7 @@
     </div>
 
     
-      <span class="badge">2026-01-12 14:00</span>
+      <span class="badge">2026-01-21 12:40</span>
     
 </header>
 
@@ -298,11 +298,11 @@
     <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
     <ul>
       
-        <li>Requirement: Stop a train at maximum operating mass from 160.0 km/h (±0.5 km/h) to 0 km/h within 800 m on straight, level track (|gradient| ≤ 1‰, curve radius ≥ 3000 m) with wheel–rail adhesion μ ≥ 0.25.</li>
+        <li>Reformulate requirement: At maximum operational mass, on straight, level track (|grade| ≤ 0.5‰) and dry rail (no visible moisture, RH ≤ 80%, no precipitation during test), the train shall stop within 800 m when an emergency brake command is issued at 160.0 ± 1.0 km/h; stopping distance measured from brake-command reception to zero speed.</li>
       
-        <li>Acceptance: Start distance at emergency brake command; stopping condition = speed ≤ 0.5 km/h sustained for ≥2 s; distance measured with calibrated odometry/GNSS (total error ≤ ±2 m); each of 10 valid runs ≤ 800 m.</li>
+        <li>Acceptance criteria: 20 consecutive runs; initial speed 160.0 ± 1.0 km/h; train mass ≥ 98% of maximum operational mass; |grade| ≤ 0.5‰; curve radius ≥ 2000 m; wind ≤ 5 m/s; dry rail = no visible moisture, RH ≤ 80%, no precipitation; distance measurement accuracy ≤ ±2 m. Pass if ≥ 19/20 runs ≤ 800 m and no run &gt; 820 m.</li>
       
-        <li>Acceptance setup: Ambient 5–35°C, wind ≤ 5 m/s, dry rail verified by adhesion μ ≥ 0.25 pre-test, brake system nominal (no faults), train mass = maximum operating mass ±1%.</li>
+        <li>Alternative acceptance: 30 runs under the defined dry, level, straight-track conditions; demonstrate with 95% confidence that the true 95th-percentile stopping distance ≤ 800 m; no individual run &gt; 820 m.</li>
       
     </ul>
   
@@ -355,11 +355,11 @@
       
         <li>Ajouter des critères d’acceptation concrets (Given/When/Then, seuils, tolérances).</li>
       
-        <li>The HMI shall update the displayed train status within 1.0 s after receiving a status change from the control system.</li>
+        <li>Replace with: &#39;The HMI shall display the current train status within 1.0 s of receiving a valid status-change message from the control system.&#39;</li>
       
-        <li>The HMI shall present status information with text x-height ≥ 6 mm, icons ≥ 10 mm, and foreground/background luminance contrast ratio ≥ 7:1 at the installed display.</li>
+        <li>Add clarity requirement: &#39;The HMI shall present the status on the primary screen without user input, using text character height &gt;= 4 mm and contrast ratio &gt;= 4.5:1, with a status icon and label.&#39;</li>
       
-        <li>Acceptance criteria: For 100 status changes, ≥95% of updates appear within 0.5 s and none exceed 1.0 s; measured text x-height ≥ 6 mm; icon size ≥ 10 mm; contrast ratio ≥ 7:1; each status includes a non-color cue (text or icon).</li>
+        <li>Acceptance criteria: (1) In 30 simulated status changes, &gt;=95% are displayed within 1.0 s; (2) Text character height measured &gt;= 4 mm; (3) Contrast ratio measured &gt;= 4.5:1; (4) Status icon and label visible on the primary screen without user input.</li>
       
     </ul>
   
@@ -380,11 +380,11 @@
     <p><strong>Suggestions IA :</strong> <span class="pill info">IA</span></p>
     <ul>
       
-        <li>Reword requirement: For any setpoint S in 1–10 mL/h, delivered flow averaged over 60 min shall be within ±5% of S at 23°C ±2°C using 0.9% saline and outlet backpressure 100 mmHg ±10 mmHg.</li>
+        <li>Requirement: At 23°C ±2°C using 0.9% saline and outlet pressure 0 ±1 kPa, the pump shall deliver an average flow within ±5% of the commanded setpoint for any setpoint from 1.0 to 10.0 mL/h, measured over 60 min.</li>
       
-        <li>Acceptance criteria: Test S ∈ {1, 5, 10} mL/h; after ≤10 min stabilization, the 60‑min average is within ±5% of S and each contiguous 10‑min interval average is within ±10%.</li>
+        <li>Acceptance: Verify at setpoints {1, 2, 5, 8, 10} mL/h; at 23°C ±2°C with 0.9% saline and outlet pressure 0 ±1 kPa, each of n=10 production units shall deliver an average flow within ±5% of setpoint over 60 min; all units must pass.</li>
       
-        <li>Acceptance criteria: Measure gravimetrically using a calibrated balance (resolution ≤0.01 g, uncertainty ≤0.02 g) with sealed collector; convert mass to volume using saline density 1.003 g/mL at 23°C ±1°C.</li>
+        <li>Acceptance: For setpoint 5.0 mL/h at 23°C ±2°C with 0.9% saline and outlet pressure 0 ±1 kPa, using a calibrated gravimetric method with uncertainty ≤1% of reading, the delivered volume in 60 min shall be 4.75–5.25 mL.</li>
       
     </ul>
   
@@ -417,11 +417,11 @@
       
         <li>Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).</li>
       
-        <li>Rewrite requirement: The ECU shall provide diagnostic information upon receiving a diagnostic read request from an external tester on the vehicle network.</li>
+        <li>Rephrase requirement: The ECU shall provide diagnostic information when any DTC is set or cleared and upon receipt of a diagnostic read request on the diagnostic communication interface.</li>
       
-        <li>Add acceptance criterion: The ECU shall transmit the diagnostic information within 500 ms of request receipt.</li>
+        <li>Acceptance criterion: Following a diagnostic read request, the ECU shall return a single response containing DTC code, timestamp, and current operating mode within 200 ms.</li>
       
-        <li>Rewrite requirement: Upon setting a new DTC, the ECU shall store the diagnostic information (DTC code, timestamp, operating mode) and make it available for subsequent diagnostic reads.</li>
+        <li>Acceptance criterion: Timestamp is milliseconds since ignition ON (resolution &gt;= 1 ms, accuracy +/- 10 ms); DTC code is a 3-byte value; operating mode is a 1-byte numeric code; all fields present in the same response.</li>
       
     </ul>
   

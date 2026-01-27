@@ -242,6 +242,54 @@ def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
 
     return hits
 
+def _rule_unbounded_scope(req: Requirement) -> Iterable[RuleHit]:
+    """
+    Détecte des formulations de type 'all conditions' / 'any conditions' :
+    - risque V&V : domaine de validité non borné, souvent non démontrable
+    """
+    text_blob = _compact_ws(" ".join([req.title, req.text, req.acceptance_criteria])).lower()
+
+    triggers = ("all conditions", "any conditions", "under all conditions", "in any conditions")
+    if not any(t in text_blob for t in triggers):
+        return []
+
+    # Même si une métrique existe (ex: 200 ms), le scope 'all conditions' reste à cadrer.
+    # On garde MINOR (pas MAJOR), car c'est souvent une clarification de contexte.
+    return [
+        RuleHit(
+            rule_id="SCP-001",
+            category="SCOPE",
+            severity=IssueSeverity.MINOR,
+            message="Unbounded scope detected ('all/any conditions'): define operating conditions and assumptions.",
+            field="text",
+            evidence=_first_excerpt(text_blob, "all conditions" if "all conditions" in text_blob else "any conditions"),
+            recommendation="Born­er le domaine de validité (conditions nominales, environnement, charges, hypothèses) et associer des critères vérifiables.",
+        )
+    ]
+
+def _rule_safety_goal(req: Requirement) -> Iterable[RuleHit]:
+    """
+    Détecte une exigence très haut niveau du type 'shall be safe' :
+    - pas directement vérifiable
+    - doit être décomposée en exigences safety mesurables / safety case
+    """
+    text = _compact_ws(req.text).lower()
+    if "shall be safe" not in text and not (text.startswith("the system shall be safe") or text.endswith("shall be safe.")):
+        return []
+
+    # INFO : on ne "pénalise" pas fort, mais on rend visible le risque d'audit.
+    return [
+        RuleHit(
+            rule_id="SAF-001",
+            category="SAFETY",
+            severity=IssueSeverity.INFO,
+            message="High-level safety goal detected: not directly verifiable as a single requirement.",
+            field="text",
+            evidence=_first_excerpt(req.text, "safe"),
+            recommendation="Décomposer en exigences safety testables (hazards, safety goals, contraintes) et fournir les preuves (safety case / traçabilité).",
+        )
+    ]
+
 
 def _rule_testability(req: Requirement) -> Iterable[RuleHit]:
     """Testabilité : besoin d’un 'verification_method' et/ou 'acceptance_criteria'."""
@@ -330,6 +378,88 @@ def compute_score(issues: Sequence[Issue], base: int = 100) -> int:
     return max(0, min(100, score))
 
 
+
+# Heuristic: detect "units"/threshold hints (optional, conservative)
+_NUMERIC_HINT_RE = re.compile(
+    r"(\b\d+(\.\d+)?\b)\s*(ms|s|sec|m|min|h|%|db|dba|°c|c|mm|cm|km/h|mbps|kbps)\b",
+    re.IGNORECASE,
+)
+
+def _has_numeric_or_threshold_hint(text: str) -> bool:
+    t = (text or "")
+    if any(x in t for x in ("<=", ">=", "<", ">", "±")):
+        return True
+    return _NUMERIC_HINT_RE.search(t) is not None
+
+
+def _first_excerpt(text: str, needle: str, *, width: int = 120) -> str:
+    """
+    Retourne un extrait centré autour de `needle` si possible.
+    Utilisé pour donner une 'evidence' lisible.
+    """
+    src = (text or "")
+    low = src.lower()
+    nlow = (needle or "").lower()
+    idx = low.find(nlow)
+    if idx < 0:
+        return _compact_ws(src)[:width]
+    start = max(0, idx - width // 3)
+    end = min(len(src), idx + len(needle) + (2 * width // 3))
+    return _compact_ws(src[start:end])
+
+
+def _rule_unbounded_scope(req: Requirement) -> Iterable["RuleHit"]:
+    """
+    Détecte des formulations de type 'all conditions' / 'any conditions' :
+    risque V&V : domaine de validité non borné, souvent non démontrable.
+    """
+    blob = _compact_ws(" ".join([req.title or "", req.text or "", req.acceptance_criteria or ""])).lower()
+    triggers = ("all conditions", "any conditions", "under all conditions", "in any conditions")
+
+    if not any(t in blob for t in triggers):
+        return []
+
+    # Même si une métrique existe, 'all conditions' reste une demande de scope non borné.
+    # On garde MINOR (pas MAJOR) : clarification attendue en audit.
+    needle = "all conditions" if "all conditions" in blob else "any conditions"
+
+    return [
+        RuleHit(
+            rule_id="SCP-001",
+            category="SCOPE",
+            severity=IssueSeverity.MINOR,
+            message="Unbounded scope detected ('all/any conditions'): define operating conditions and assumptions.",
+            field="requirement_text",
+            evidence=_first_excerpt(req.text or "", needle),
+            recommendation="Born­er le domaine de validité (conditions nominales, environnement, charge, hypothèses) et associer des critères vérifiables.",
+        )
+    ]
+
+
+def _rule_safety_goal(req: Requirement) -> Iterable["RuleHit"]:
+    """
+    Détecte une exigence très haut niveau du type 'shall be safe' :
+    pas directement vérifiable en tant qu'exigence unique.
+    """
+    text = _compact_ws(req.text or "").lower()
+
+    # Pattern volontairement strict pour éviter faux positifs
+    if "shall be safe" not in text:
+        return []
+
+    return [
+        RuleHit(
+            rule_id="SAF-001",
+            category="SAFETY",
+            severity=IssueSeverity.INFO,  # comme demandé
+            message="High-level safety goal detected: not directly verifiable as a single requirement.",
+            field="requirement_text",
+            evidence=_first_excerpt(req.text or "", "safe"),
+            recommendation="Décomposer en exigences safety testables (hazards, safety goals, contraintes) et fournir les preuves (safety case / traçabilité).",
+        )
+    ]
+
+
 def analyze_requirement(req: Requirement, *, verbose: bool = False) -> AnalysisResult:
     """
     Analyse une exigence via règles déterministes et retourne un AnalysisResult.
@@ -346,6 +476,8 @@ def analyze_requirement(req: Requirement, *, verbose: bool = False) -> AnalysisR
 
         hits: List[RuleHit] = []
         hits.extend(list(_rule_ambiguity(req)))
+        hits.extend(list(_rule_unbounded_scope(req)))
+        hits.extend(list(_rule_safety_goal(req)))
         hits.extend(list(_rule_testability(req)))
         hits.extend(list(_rule_acceptance_criteria(req)))
 

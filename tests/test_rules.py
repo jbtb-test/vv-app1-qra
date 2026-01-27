@@ -190,3 +190,30 @@ def test_rule_amb_002_flags_reliably():
     res = analyze_requirement(r)
     assert "AMB-002" in _issue_ids(res)
     assert res.score < 100
+
+def test_rule_scp_001_flags_all_conditions_scope():
+    r = Requirement(
+        req_id="REQ-010",
+        title="Comms latency all conditions",
+        text="The onboard unit shall exchange messages with wayside within 200 ms in all conditions.",
+        verification_method="Test",
+        acceptance_criteria="Latency <= 200 ms in all conditions.",
+    )
+    res = analyze_requirement(r)
+    assert "SCP-001" in _issue_ids(res)
+    issue = _issues_by_rule(res, "SCP-001")[0]
+    assert issue.severity == IssueSeverity.MINOR
+
+
+def test_rule_saf_001_flags_shall_be_safe_as_info():
+    r = Requirement(
+        req_id="REQ-019",
+        title="Safety",
+        text="The system shall be safe.",
+        verification_method="Analysis",
+        acceptance_criteria="",
+    )
+    res = analyze_requirement(r)
+    assert "SAF-001" in _issue_ids(res)
+    issue = _issues_by_rule(res, "SAF-001")[0]
+    assert issue.severity == IssueSeverity.INFO

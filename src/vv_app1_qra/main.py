@@ -53,7 +53,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import json
-from vv_app1_qra.models import AnalysisResult, Requirement
+from vv_app1_qra.models import AnalysisResult, Requirement, SuggestionSource
+
 from vv_app1_qra.rules import analyze_requirement
 
 from vv_app1_qra.ia_assistant import suggest_improvements
@@ -427,7 +428,10 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         # ------------------------------------------------------------
         log.info("AI      : optional suggestions (1.9.2)")
 
-        for analysis in analyses:
+        ai_candidates = [a for a in analyses if a.issues]  # <-- ONLY at-risk
+        log.info(f"AI      : candidates={len(ai_candidates)}/{len(analyses)} (issues>0)")
+
+        for analysis in ai_candidates:
             try:
                 ai_suggestions = suggest_improvements(
                     req=analysis.requirement,
@@ -441,6 +445,7 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                 log.warning(
                     f"AI suggestion skipped for {analysis.requirement.req_id}: {e}"
                 )
+
 
         # ------------------------------------------------------------
         # 4) Outputs legacy (CSV + HTML MVP)
@@ -482,7 +487,8 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                         }
                         for i in a.issues
                     ],
-                    "ai_suggestions": [s.message for s in a.suggestions],
+                    "ai_suggestions": [s.message for s in a.suggestions if s.source == SuggestionSource.AI],
+
                 }
                 for a in analyses
             ],

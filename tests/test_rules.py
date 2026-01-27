@@ -162,3 +162,31 @@ def test_no_issues_for_good_requirement():
     assert res.issues == []
     assert res.suggestions == []
     assert res.score == 100
+
+
+def test_rule_amb_002_flags_high_accuracy_and_normal_operation():
+    r = Requirement(
+        req_id="REQ-005",
+        title="Nav accuracy",
+        text="The navigation solution shall have high accuracy during normal operation.",
+        verification_method="Analysis",
+        acceptance_criteria="",
+    )
+    res = analyze_requirement(r)
+    assert "AMB-002" in _issue_ids(res)
+    assert res.score < 100  # devrait être 90
+    # suggestions RULE présentes
+    assert all(s.source == SuggestionSource.RULE for s in res.suggestions)
+
+
+def test_rule_amb_002_flags_reliably():
+    r = Requirement(
+        req_id="REQ-014",
+        title="DTC reliability",
+        text="The ECU shall store DTCs reliably.",
+        verification_method="Test",
+        acceptance_criteria="Verify DTC persistence after reboot.",
+    )
+    res = analyze_requirement(r)
+    assert "AMB-002" in _issue_ids(res)
+    assert res.score < 100

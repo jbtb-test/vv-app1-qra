@@ -102,6 +102,10 @@ AMBIGUOUS_TERMS: Tuple[str, ...] = (
     "optimize",
     "minimize",
     "maximize",
+    "high accuracy",
+    "normal operation",
+    "reliably",
+    "low jitter",
 )
 
 WEAK_MODAL_VERBS: Tuple[str, ...] = (

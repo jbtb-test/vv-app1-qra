@@ -1,6 +1,6 @@
 # APP1 — QRA (Quality Risk Assessment) — Requirements Quality Assistant
 
-## TL;DR — Démo en 1 phrase
+##  Démo en 1 phrase
 Outil d’analyse qualité d’exigences (type DOORS / Polarion) qui détecte automatiquement les défauts
 (ambiguïté, testabilité, critères d’acceptation) et génère un rapport HTML démontrable avec IA optionnelle et non décisionnelle.
 
@@ -93,8 +93,10 @@ Des captures d’écran sont disponibles dans :
 
 Cette option correspond au mode nominal de l’outil (100 % déterministe).
 
-```bash
-python -m vv_app1_qra.main --out-dir data/outputs --verbose
+```powershell
+. .\tools\load_env_secret.ps1
+$env:ENABLE_AI="0"
+python -m vv_app1_qra.main --out-dir data\outputs --verbose
 ```
 
 Génère automatiquement :

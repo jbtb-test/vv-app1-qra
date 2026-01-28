@@ -1,5 +1,21 @@
 id,score,raw_status,display_status,text,issues_count,suggestions_label,suggestions_count
 REQ-001,100,CHECKED,OK,The braking system shall stop the train within 800 m when the emergency brake is applied at 160 km/h on dry track.,0,RULES,0
-REQ-002,70,CHECKED,À risque,The HMI should display the status quickly and clearly for the driver.,3,RULES,3
+REQ-002,70,CHECKED,À risque,The HMI should display the status quickly and clearly for the driver.,3,RULES,0
 REQ-003,100,CHECKED,OK,The infusion pump shall deliver 5 mL/h ± 5% for flow rates between 1 mL/h and 10 mL/h at 23°C with saline.,0,RULES,0
-REQ-004,90,CHECKED,À risque,The ECU shall provide diagnostic information if needed.,1,RULES,1
+REQ-004,90,CHECKED,À risque,The ECU shall provide diagnostic information if needed.,1,RULES,0
+REQ-005,90,CHECKED,À risque,The navigation solution shall have high accuracy during normal operation.,1,RULES,0
+REQ-006,100,CHECKED,OK,The navigation solution shall provide position error <= 10 m (95th percentile) in nominal flight conditions.,0,RULES,0
+REQ-007,100,CHECKED,OK,The system shall prevent unauthorized access to admin functions.,0,RULES,0
+REQ-008,100,CHECKED,OK,"The system shall enforce RBAC such that only ADMIN role can access admin APIs, and all denied attempts are logged with user_id, timestamp and source IP.",0,RULES,0
+REQ-009,100,CHECKED,OK,The onboard unit shall exchange messages with wayside within 200 ms.,0,RULES,0
+REQ-010,90,CHECKED,À risque,The onboard unit shall exchange messages with wayside within 200 ms in all conditions.,1,RULES,0
+REQ-011,100,CHECKED,OK,The device shall raise an audible alarm when occlusion is detected.,0,RULES,0
+REQ-012,100,CHECKED,OK,"The device shall raise an audible alarm within 2 seconds of occlusion detection, with sound pressure level >= 60 dBA at 1 meter.",0,RULES,0
+REQ-013,100,CHECKED,OK,The ECU shall store at least 50 DTCs.,0,RULES,0
+REQ-014,90,CHECKED,À risque,The ECU shall store DTCs reliably.,1,RULES,0
+REQ-015,100,CHECKED,OK,The modem shall support data rate up to 20 Mbps.,0,RULES,0
+REQ-016,90,CHECKED,À risque,The modem shall support data rate up to 20 Mbps with low jitter.,1,RULES,0
+REQ-017,100,CHECKED,OK,The software shall be updatable in the field.,0,RULES,0
+REQ-018,100,CHECKED,OK,"The software shall support OTA update with rollback such that if update fails, system returns to previous version within 5 minutes without loss of configuration.",0,RULES,0
+REQ-019,95,CHECKED,À risque,The system shall be safe.,1,RULES,0
+REQ-020,100,CHECKED,OK,"The system shall demonstrate compliance with EN 50128 with evidence package including requirements, traceability, tests, and safety case artifacts.",0,RULES,0

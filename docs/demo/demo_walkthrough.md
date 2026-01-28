@@ -49,7 +49,9 @@ Cette étape montre la valeur de l’outil **sans dépendre de l’environnement
 
 ### Commande
 
-```bash
+```powershell
+. .\tools\load_env_secret.ps1
+$env:ENABLE_AI="0"
 python -m vv_app1_qra.main --verbose
 ```
 

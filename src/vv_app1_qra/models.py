@@ -9,9 +9,9 @@ Description :
 
 Rôle :
     - Définir les structures de données stables utilisées par :
-        * rules.py : création d'Issue / AnalysisResult
-        * ia_assistant.py : création de Suggestion (source=AI)
-        * report.py : rendu HTML/CSV depuis AnalysisResult
+        * rules.py : Issue / AnalysisResult
+        * ia_assistant.py : Suggestion (source=AI)
+        * report.py : rendu HTML/CSV
     - Fournir une sérialisation simple (to_dict / from_dict) pour :
         * outputs
         * logs
@@ -111,23 +111,20 @@ class Requirement:
     text: str
     source: str = "demo"
 
-    # champs "métier" (utiles pour scoring/règles/report)
     system: str = ""
     component: str = ""
     priority: str = ""
     rationale: str = ""
     verification_method: str = ""
     acceptance_criteria: str = ""
-
-    # extensible : tout champ additionnel non standard
     meta: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        # dataclass frozen=True => object.__setattr__
         object.__setattr__(self, "req_id", _s(self.req_id))
         object.__setattr__(self, "title", _s(self.title))
         object.__setattr__(self, "text", _s(self.text))
         object.__setattr__(self, "source", _s(self.source) or "demo")
+
         object.__setattr__(self, "system", _s(self.system))
         object.__setattr__(self, "component", _s(self.component))
         object.__setattr__(self, "priority", _s(self.priority))
@@ -137,9 +134,11 @@ class Requirement:
 
         if not self.req_id:
             raise ValueError("Requirement.req_id must be non-empty.")
-
         if not (self.title or self.text):
-            raise ValueError("Requirement must have at least a title or a text.")
+            raise ValueError("Requirement must have at least title or text.")
+
+        if self.meta is None:
+            object.__setattr__(self, "meta", {})
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -153,7 +152,7 @@ class Requirement:
             "rationale": self.rationale,
             "verification_method": self.verification_method,
             "acceptance_criteria": self.acceptance_criteria,
-            "meta": dict(self.meta),
+            "meta": dict(self.meta or {}),
         }
 
     @staticmethod
@@ -171,21 +170,20 @@ class Requirement:
             rationale=d.get("rationale", ""),
             verification_method=d.get("verification_method", ""),
             acceptance_criteria=d.get("acceptance_criteria", ""),
-            meta=dict(d.get("meta", {}) or {}),
+            meta=d.get("meta", {}) or {},
         )
 
 
 @dataclass(frozen=True)
 class Issue:
-    """Défaut détecté par une règle déterministe."""
+    """Défaut détecté par règle déterministe."""
     rule_id: str
     category: str
     severity: IssueSeverity
     message: str
-
-    field: str = ""              # ex: "acceptance_criteria", "text"
-    evidence: str = ""           # extrait ou preuve courte
-    recommendation: str = ""     # action proposée (non obligatoire)
+    field: str = ""
+    evidence: str = ""
+    recommendation: str = ""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "rule_id", _s(self.rule_id))
@@ -201,6 +199,9 @@ class Issue:
             raise ValueError("Issue.category must be non-empty.")
         if not self.message:
             raise ValueError("Issue.message must be non-empty.")
+
+        sev = _enum_from_str(IssueSeverity, self.severity, "Issue.severity")
+        object.__setattr__(self, "severity", sev)  # type: ignore[arg-type]
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -234,12 +235,14 @@ class Suggestion:
     """Suggestion (RULE/AI/HUMAN). Non décisionnelle par design."""
     source: SuggestionSource
     message: str
-
-    rule_id: str = ""                 # si source=RULE
-    rationale: str = ""               # justification courte
-    confidence: Optional[float] = None  # si AI : score optionnel 0..1
+    rule_id: str = ""
+    rationale: str = ""
+    confidence: Optional[float] = None
 
     def __post_init__(self) -> None:
+        src = _enum_from_str(SuggestionSource, self.source, "Suggestion.source")
+        object.__setattr__(self, "source", src)  # type: ignore[arg-type]
+
         object.__setattr__(self, "message", _s(self.message))
         object.__setattr__(self, "rule_id", _s(self.rule_id))
         object.__setattr__(self, "rationale", _s(self.rationale))
@@ -287,9 +290,8 @@ class AnalysisResult:
     requirement: Requirement
     issues: List[Issue] = field(default_factory=list)
     suggestions: List[Suggestion] = field(default_factory=list)
-
     score: Optional[int] = None
-    status: str = "LOADED"  # LOADED -> CHECKED -> SUGGESTED -> REPORTED
+    status: str = "LOADED"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "status", _s(self.status) or "LOADED")

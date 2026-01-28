@@ -6,26 +6,32 @@ vv_app1_qra.ia_assistant
 ------------------------------------------------------------
 Description :
     Module IA (OpenAI) encapsulé pour suggestions d’amélioration
-    (APP1 — QRA) — Étape 1.9
+    (APP1 — QRA) — IA "suggestion-only" et non bloquante.
 
-Objectifs :
+Rôle :
     - Aucune dépendance IA obligatoire pour faire tourner l’app
-    - IA désactivable via ENABLE_AI (env var) + fallback contrôlé
-    - API OpenAI appelée uniquement si ENABLE_AI=1 ET OPENAI_API_KEY présent
+    - IA activable via ENABLE_AI=1 (env var) + OPENAI_API_KEY présent
+    - Fallback systématique : aucune exception propagée vers le pipeline
 
 Variables d'environnement :
     - ENABLE_AI         : 0/1 (default: 0)
     - OPENAI_API_KEY    : clé API (si absent -> IA désactivée)
-    - OPENAI_MODEL      : modèle (default: gpt-5) [modif possible]
+    - OPENAI_MODEL      : modèle (default: gpt-5) [ajustable]
 
-API utilisée :
-    - OpenAI Responses API via openai-python (si installé)
-      Voir docs : Responses API + openai-python client
+Usage :
+    - Appel depuis vv_app1_qra.main via suggest_improvements()
+
+Notes :
+    - Sortie attendue strictement JSON (contrat interne).
+    - Si JSON invalide / SDK absent / appel échoue => fallback [].
 ============================================================
 """
 
 from __future__ import annotations
 
+# ============================================================
+# 📦 Imports
+# ============================================================
 import json
 import logging
 import os
@@ -33,11 +39,30 @@ from typing import List, Optional, Sequence
 
 from vv_app1_qra.models import Issue, Requirement, Suggestion, SuggestionSource
 
-log = logging.getLogger(__name__)
+# ============================================================
+# 🧾 Logging (local, autonome)
+# ============================================================
+def get_logger(name: str) -> logging.Logger:
+    """
+    Crée un logger simple et stable (stdout), sans dépendance externe.
+    """
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        fmt = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(fmt)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
 
+
+log = get_logger(__name__)
 
 # ============================================================
-# ⚠️ Exceptions
+# ⚠️ Exceptions spécifiques au module
 # ============================================================
 class ModuleError(Exception):
     """Erreur spécifique au module ia_assistant."""
@@ -46,7 +71,7 @@ class ModuleError(Exception):
 # ============================================================
 # 🔧 Config / Helpers
 # ============================================================
-def _truthy(value: str) -> bool:
+def _truthy(value: str | None) -> bool:
     v = (value or "").strip().lower()
     return v in {"1", "true", "yes", "y", "on"}
 
@@ -136,6 +161,13 @@ def suggest_improvements(
     model: Optional[str] = None,
     verbose: bool = False,
 ) -> List[Suggestion]:
+    """
+    Retourne une liste de Suggestion (source=AI), ou [] si IA désactivée/indisponible.
+
+    Contrats :
+      - Non bloquant : aucune exception ne remonte
+      - Suggestion-only : ne modifie jamais l'exigence
+    """
     if verbose:
         log.setLevel(logging.DEBUG)
 
@@ -186,18 +218,18 @@ def suggest_improvements(
             rationale = (item.get("rationale") or "").strip()
             conf = item.get("confidence", None)
 
-            suggestion = Suggestion(
-                source=SuggestionSource.AI,
-                message=msg,
-                rule_id="AI-001",
-                rationale=rationale,
-                confidence=conf if isinstance(conf, (int, float)) else None,
+            out.append(
+                Suggestion(
+                    source=SuggestionSource.AI,
+                    message=msg,
+                    rule_id="AI-001",
+                    rationale=rationale,
+                    confidence=conf if isinstance(conf, (int, float)) else None,
+                )
             )
-            out.append(suggestion)
 
         return out
 
     except Exception as e:
         log.warning(f"AI call failed -> fallback [] ({e})")
         return []
-

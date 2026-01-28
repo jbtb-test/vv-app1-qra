@@ -1,17 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ============================================================
 tests.test_report
 ------------------------------------------------------------
 Description :
-    Tests unitaires (pytest) — APP1 QRA — Étape 1.12
-    Validation de la génération du rapport HTML structuré.
+    Tests unitaires — APP1 QRA — génération rapport HTML/CSV structuré.
 
 Objectifs :
-    - Vérifier que le rapport HTML est généré
-    - Vérifier que le fichier n’est pas vide
-    - Vérifier la présence d’éléments clés (score, statut, exigences)
+    - HTML généré et non vide
+    - Déterminisme (hors timestamp)
+    - CSV contient IDs/scores attendus
+
+Usage :
+    pytest -q
 ============================================================
 """
+
+from __future__ import annotations
 
 import csv
 import re
@@ -19,13 +25,19 @@ from pathlib import Path
 
 from vv_app1_qra.report import generate_csv_report, generate_html_report
 
+
+# ============================================================
+# 🔧 Helpers
+# ============================================================
+def _normalize_report_html(html: str) -> str:
+    # Supprime le timestamp "YYYY-MM-DD HH:MM" dans le badge
+    return re.sub(r"\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", "<TS>", html)
+
+
 # ============================================================
 # 🧪 Tests
 # ============================================================
 def test_generate_html_report_creates_valid_html(tmp_path: Path):
-    """
-    Vérifie que generate_html_report() produit un fichier HTML valide.
-    """
     output_path = tmp_path / "qra_report.html"
 
     qra_result = {
@@ -47,29 +59,15 @@ def test_generate_html_report_creates_valid_html(tmp_path: Path):
                 "score": 70,
                 "raw_status": "CHECKED",
                 "display_status": "À risque",
-                "issues": [
-                    {
-                        "severity": "MINOR",
-                        "message": "Weak modal detected",
-                    }
-                ],
-                "ai_suggestions": [
-                    "Use shall with measurable criteria"
-                ],
+                "issues": [{"severity": "MINOR", "message": "Weak modal detected"}],
+                "ai_suggestions": ["Use shall with measurable criteria"],
             },
         ],
     }
 
-    result_path = generate_html_report(
-        qra_result=qra_result,
-        output_path=output_path,
-        verbose=False,
-    )
+    result_path = generate_html_report(qra_result=qra_result, output_path=output_path, verbose=False)
 
-    # Fichier créé
     assert result_path.exists()
-
-    # Contenu HTML
     content = result_path.read_text(encoding="utf-8")
 
     assert "<html" in content.lower()
@@ -80,24 +78,16 @@ def test_generate_html_report_creates_valid_html(tmp_path: Path):
     assert "À risque" in content
 
 
-def _normalize_report_html(html: str) -> str:
-    # supprime le timestamp "YYYY-MM-DD HH:MM" dans le badge
-    html = re.sub(r"\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", "<TS>", html)
-    return html
-
-def test_report_is_deterministic_except_timestamp(tmp_path, monkeypatch):
-    # NO-AI forcé
+def test_report_is_deterministic_except_timestamp(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("ENABLE_AI", "0")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-    from vv_app1_qra.report import generate_html_report
 
     qra_result = {
         "global_score": 90.0,
         "global_status": "À risque",
         "requirements": [
             {"id": "REQ-001", "score": 100, "display_status": "OK", "raw_status": "CHECKED", "text": "t1", "issues": [], "ai_suggestions": []},
-            {"id": "REQ-002", "score": 70, "display_status": "À risque", "raw_status": "CHECKED", "text": "t2", "issues": [{"severity":"MAJOR","message":"m"}], "ai_suggestions": ["s1"]},
+            {"id": "REQ-002", "score": 70, "display_status": "À risque", "raw_status": "CHECKED", "text": "t2", "issues": [{"severity": "MAJOR", "message": "m"}], "ai_suggestions": ["s1"]},
         ],
     }
 
@@ -113,18 +103,16 @@ def test_report_is_deterministic_except_timestamp(tmp_path, monkeypatch):
     assert h1 == h2
 
 
-def test_csv_report_contains_expected_ids_and_scores(tmp_path, monkeypatch):
+def test_csv_report_contains_expected_ids_and_scores(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("ENABLE_AI", "0")
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-
-    from vv_app1_qra.report import generate_csv_report
 
     qra_result = {
         "global_score": 90.0,
         "global_status": "À risque",
         "requirements": [
             {"id": "REQ-001", "score": 100, "display_status": "OK", "raw_status": "CHECKED", "text": "t1", "issues": [], "ai_suggestions": []},
-            {"id": "REQ-002", "score": 70, "display_status": "À risque", "raw_status": "CHECKED", "text": "t2", "issues": [{"severity":"MAJOR","message":"m"}], "ai_suggestions": ["s1"]},
+            {"id": "REQ-002", "score": 70, "display_status": "À risque", "raw_status": "CHECKED", "text": "t2", "issues": [{"severity": "MAJOR", "message": "m"}], "ai_suggestions": ["s1"]},
         ],
     }
 

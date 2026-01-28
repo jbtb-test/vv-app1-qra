@@ -1,18 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ============================================================
 tests.test_rules
 ------------------------------------------------------------
 Description :
-    Tests unitaires (pytest) — APP1 QRA — Étape 1.8.1
-    Validation des règles déterministes qualité exigences.
+    Tests unitaires (pytest) — APP1 QRA — règles déterministes.
 
 Objectifs :
     - Vérifier détection ambiguïté (modal faible / terme ambigu)
     - Vérifier testabilité (absence VM + AC)
     - Vérifier qualité AC (trop court / terme ambigu)
+    - Vérifier scope/safety
     - Vérifier score (0..100) et status=CHECKED
+
+Usage :
+    pytest -q
 ============================================================
 """
+
+from __future__ import annotations
+
+from typing import List
 
 import pytest
 
@@ -21,9 +30,9 @@ from vv_app1_qra.rules import analyze_requirement, compute_score
 
 
 # ============================================================
-# 🧪 Helpers
+# 🔧 Helpers
 # ============================================================
-def _issue_ids(result):
+def _issue_ids(result) -> List[str]:
     return [i.rule_id for i in result.issues]
 
 
@@ -52,7 +61,7 @@ def test_rule_tst_001_not_testable_when_no_vm_and_no_ac():
     assert issue.category == "TESTABILITY"
     assert issue.field in ("verification_method", "")
 
-    # suggestions RULE présentes
+    # Suggestions RULE présentes et non décisionnelles
     assert len(res.suggestions) >= 1
     assert all(s.source == SuggestionSource.RULE for s in res.suggestions)
 
@@ -66,6 +75,7 @@ def test_rule_tst_002_acceptance_criteria_missing_only():
         acceptance_criteria="",
     )
     res = analyze_requirement(r)
+
     assert "TST-002" in _issue_ids(res)
     issue = _issues_by_rule(res, "TST-002")[0]
     assert issue.severity == IssueSeverity.MINOR
@@ -103,6 +113,9 @@ def test_rule_amb_002_detects_ambiguous_term():
 
 
 def test_rule_ac_001_detects_too_short_ac():
+    """
+    AC-001 : AC trop courte => MINOR (contrat attendu par la suite de tests).
+    """
     r = Requirement(
         req_id="REQ-005",
         title="Export",
@@ -111,6 +124,7 @@ def test_rule_ac_001_detects_too_short_ac():
         acceptance_criteria="Works.",
     )
     res = analyze_requirement(r)
+
     assert "AC-001" in _issue_ids(res)
     issue = _issues_by_rule(res, "AC-001")[0]
     assert issue.severity == IssueSeverity.MINOR
@@ -126,6 +140,7 @@ def test_rule_ac_002_detects_ambiguous_term_in_ac():
         acceptance_criteria="Logging is secure and adequate.",
     )
     res = analyze_requirement(r)
+
     assert "AC-002" in _issue_ids(res)
     issue = _issues_by_rule(res, "AC-002")[0]
     assert issue.severity == IssueSeverity.INFO
@@ -141,11 +156,8 @@ def test_score_computation_clamped_0_100():
     )
     res = analyze_requirement(r)
 
-    # score borné
     assert isinstance(res.score, int)
     assert 0 <= res.score <= 100
-
-    # cohérence compute_score()
     assert res.score == compute_score(res.issues)
 
 
@@ -158,6 +170,7 @@ def test_no_issues_for_good_requirement():
         acceptance_criteria="Given nominal load, when sending 1000 requests, then 95% have latency <= 200 ms.",
     )
     res = analyze_requirement(r)
+
     assert res.status == "CHECKED"
     assert res.issues == []
     assert res.suggestions == []
@@ -166,16 +179,16 @@ def test_no_issues_for_good_requirement():
 
 def test_rule_amb_002_flags_high_accuracy_and_normal_operation():
     r = Requirement(
-        req_id="REQ-005",
+        req_id="REQ-009",
         title="Nav accuracy",
         text="The navigation solution shall have high accuracy during normal operation.",
         verification_method="Analysis",
         acceptance_criteria="",
     )
     res = analyze_requirement(r)
+
     assert "AMB-002" in _issue_ids(res)
-    assert res.score < 100  # devrait être 90
-    # suggestions RULE présentes
+    assert res.score < 100
     assert all(s.source == SuggestionSource.RULE for s in res.suggestions)
 
 
@@ -188,8 +201,10 @@ def test_rule_amb_002_flags_reliably():
         acceptance_criteria="Verify DTC persistence after reboot.",
     )
     res = analyze_requirement(r)
+
     assert "AMB-002" in _issue_ids(res)
     assert res.score < 100
+
 
 def test_rule_scp_001_flags_all_conditions_scope():
     r = Requirement(
@@ -200,6 +215,7 @@ def test_rule_scp_001_flags_all_conditions_scope():
         acceptance_criteria="Latency <= 200 ms in all conditions.",
     )
     res = analyze_requirement(r)
+
     assert "SCP-001" in _issue_ids(res)
     issue = _issues_by_rule(res, "SCP-001")[0]
     assert issue.severity == IssueSeverity.MINOR
@@ -214,6 +230,7 @@ def test_rule_saf_001_flags_shall_be_safe_as_info():
         acceptance_criteria="",
     )
     res = analyze_requirement(r)
+
     assert "SAF-001" in _issue_ids(res)
     issue = _issues_by_rule(res, "SAF-001")[0]
     assert issue.severity == IssueSeverity.INFO

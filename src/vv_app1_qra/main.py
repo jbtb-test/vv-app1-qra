@@ -6,35 +6,35 @@ vv_app1_qra.main
 ------------------------------------------------------------
 Description :
     APP1 — QRA (Quality Risk Assessment)
-    Étape 1.6 — CLI main
+    CLI : lecture CSV exigences, règles déterministes, suggestions IA optionnelles,
+    génération d’outputs (legacy + rapports structurés).
 
 Rôle :
-    - Fournir une CLI robuste (sans IA) :
-        * lecture CSV exigences
-        * orchestration MVP (chargement + préparation)
-        * génération outputs (CSV + HTML)
-    - Aucune dépendance aux modules futurs (models/rules/ia/report),
-      ceux-ci arriveront aux étapes 1.7+.
+    - Pipeline V&V déterministe prioritaire
+    - IA "suggestion-only" : non bloquante, fallback systématique
+    - Outputs :
+        * legacy timestamped CSV/HTML (compat historique)
+        * rapports stables qra_report.html + qra_report.csv
 
 Architecture (repo) :
     - Code : src/vv_app1_qra/
     - Tests : tests/
     - Données : data/
     - Docs : docs/
-    - Templates : templates/
+    - Templates : templates/qra/
 
 Usage CLI :
-    python -m vv_app1_qra.main
+    python -m vv_app1_qra.main --out-dir data/outputs --verbose
     python -m vv_app1_qra.main --input data/inputs/demo_input.csv --out-dir data/outputs
-    python -m vv_app1_qra.main --verbose
     python -m vv_app1_qra.main --fail-on-empty
 
-Usage test :
-    pytest
+Mode IA (standard portfolio) :
+    . .\\tools\\load_env_secret.ps1
+    $env:ENABLE_AI="1"
+    python -m vv_app1_qra.main --out-dir data/outputs --verbose
 
 Notes :
-    - L’IA est volontairement ABSENTE en 1.6 (ENABLE_AI ignoré ici).
-    - Le HTML est un rendu standalone minimal (ouvrable localement).
+    - Si ENABLE_AI=1 sans OPENAI_API_KEY => fallback [] (log warning)
 ============================================================
 """
 
@@ -46,20 +46,17 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import json
 import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import json
-from vv_app1_qra.models import AnalysisResult, Requirement, SuggestionSource
-
-from vv_app1_qra.rules import analyze_requirement
-
 from vv_app1_qra.ia_assistant import suggest_improvements
-
-from vv_app1_qra.report import generate_html_report, generate_csv_report
+from vv_app1_qra.models import AnalysisResult, Requirement, SuggestionSource
+from vv_app1_qra.report import generate_csv_report, generate_html_report
+from vv_app1_qra.rules import analyze_requirement
 
 # ============================================================
 # 🧾 Logging (local, autonome)
@@ -83,7 +80,6 @@ def get_logger(name: str) -> logging.Logger:
 
 log = get_logger(__name__)
 
-
 # ============================================================
 # ⚠️ Exceptions spécifiques au module
 # ============================================================
@@ -105,7 +101,7 @@ class ProcessResult:
 
 
 # ============================================================
-# 🔧 Fonctions principales
+# 🔧 Fonctions utilitaires (CSV mapping)
 # ============================================================
 def _normalize_header(s: str) -> str:
     return (s or "").strip().lower()
@@ -140,10 +136,6 @@ def load_requirements_csv(input_path: Path) -> List[Dict[str, str]]:
       - id/requirement_id
       - text/requirement/description/content
       - title/summary
-
-    Retour :
-      - Liste de dict normalisés (minimum : req_id, title, text, source)
-        + champs conservés utiles pour 1.8+
     """
     if not input_path.exists():
         raise ModuleError(f"Input file not found: {input_path}")
@@ -207,9 +199,10 @@ def load_requirements_csv(input_path: Path) -> List[Dict[str, str]]:
 
         return rows
 
+
 def _row_to_requirement(row: Dict[str, str]) -> Requirement:
     """
-    Convertit une ligne normalisée (dict) en Requirement (modèle domaine 1.7).
+    Convertit une ligne normalisée (dict) en Requirement (modèle domaine).
     Lève ValueError si invalide (contrat Requirement.__post_init__).
     """
     return Requirement(
@@ -227,9 +220,12 @@ def _row_to_requirement(row: Dict[str, str]) -> Requirement:
     )
 
 
+# ============================================================
+# 🧾 Outputs legacy (compat)
+# ============================================================
 def write_output_csv(out_path: Path, analyses: List[AnalysisResult]) -> None:
     """
-    Écrit un CSV enrichi (1.8.2) :
+    Écrit un CSV enrichi (legacy) :
       - status/score
       - issues_count/suggestions_count
       - issues_json/suggestions_json (compact JSON)
@@ -295,6 +291,9 @@ def _html_escape(s: str) -> str:
 
 
 def write_output_html(out_path: Path, analyses: List[AnalysisResult]) -> None:
+    """
+    Génère un HTML standalone minimal (legacy) ouvrable localement.
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _issues_summary(a: AnalysisResult) -> str:
@@ -364,14 +363,17 @@ def write_output_html(out_path: Path, analyses: List[AnalysisResult]) -> None:
     out_path.write_text(html, encoding="utf-8")
 
 
+# ============================================================
+# 🔧 Fonction principale (pipeline)
+# ============================================================
 def process(data: Dict[str, Any]) -> ProcessResult:
     """
-    Fonction principale du module.
-    - Charge le CSV
-    - Convertit chaque ligne en Requirement (modèle domaine)
-    - Exécute les règles déterministes (1.8.2)
-    - Génère outputs CSV / HTML legacy
-    - Génère rapport HTML QRA structuré (1.10)
+    Pipeline QRA :
+      1) charge CSV
+      2) map -> Requirement
+      3) règles déterministes
+      4) suggestions IA optionnelles (non bloquantes)
+      5) outputs legacy + rapports structurés
     """
     try:
         if not isinstance(data, dict):
@@ -396,17 +398,12 @@ def process(data: Dict[str, Any]) -> ProcessResult:
             f"(ENABLE_AI={enable_ai_env}, key={'yes' if has_key else 'no'})"
         )
 
-        # ------------------------------------------------------------
         # 1) Load raw rows
-        # ------------------------------------------------------------
         rows = load_requirements_csv(input_path)
-
         if fail_on_empty and not rows:
             raise ModuleError("Empty dataset (0 valid requirements).")
 
-        # ------------------------------------------------------------
         # 2) Map rows -> Requirement
-        # ------------------------------------------------------------
         requirements: List[Requirement] = []
         for idx, row in enumerate(rows, start=1):
             try:
@@ -416,19 +413,12 @@ def process(data: Dict[str, Any]) -> ProcessResult:
 
         log.info("Rules   : enabled (1.8.2)")
 
-        # ------------------------------------------------------------
         # 3) Analyze (rules)
-        # ------------------------------------------------------------
-        analyses: List[AnalysisResult] = [
-            analyze_requirement(r, verbose=verbose) for r in requirements
-        ]
+        analyses: List[AnalysisResult] = [analyze_requirement(r, verbose=verbose) for r in requirements]
 
-        # ------------------------------------------------------------
         # 3bis) AI suggestions (optional, non-blocking)
-        # ------------------------------------------------------------
         log.info("AI      : optional suggestions (1.9.2)")
-
-        ai_candidates = [a for a in analyses if a.issues]  # <-- ONLY at-risk
+        ai_candidates = [a for a in analyses if a.issues]  # ONLY at-risk
         log.info(f"AI      : candidates={len(ai_candidates)}/{len(analyses)} (issues>0)")
 
         for analysis in ai_candidates:
@@ -442,14 +432,9 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                 if ai_suggestions:
                     analysis.suggestions.extend(ai_suggestions)
             except Exception as e:
-                log.warning(
-                    f"AI suggestion skipped for {analysis.requirement.req_id}: {e}"
-                )
+                log.warning(f"AI suggestion skipped for {analysis.requirement.req_id}: {e}")
 
-
-        # ------------------------------------------------------------
-        # 4) Outputs legacy (CSV + HTML MVP)
-        # ------------------------------------------------------------
+        # 4) Outputs legacy (CSV + HTML)
         stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -459,9 +444,7 @@ def process(data: Dict[str, Any]) -> ProcessResult:
         write_output_csv(out_csv, analyses)
         write_output_html(out_html, analyses)
 
-        # ------------------------------------------------------------
-        # 4bis) Rapport HTML/CSV QRA structuré (1.10)
-        # ------------------------------------------------------------
+        # 4bis) Rapport HTML/CSV QRA structuré (stable paths)
         qra_report_path = out_dir / "qra_report.html"
         qra_report_csv_path = out_dir / "qra_report.csv"
 
@@ -480,15 +463,8 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                     "score": a.score,
                     "raw_status": a.status,
                     "display_status": _display_status(a),
-                    "issues": [
-                        {
-                            "severity": i.severity.value,
-                            "message": i.message,
-                        }
-                        for i in a.issues
-                    ],
+                    "issues": [{"severity": i.severity.value, "message": i.message} for i in a.issues],
                     "ai_suggestions": [s.message for s in a.suggestions if s.source == SuggestionSource.AI],
-
                 }
                 for a in analyses
             ],
@@ -497,41 +473,21 @@ def process(data: Dict[str, Any]) -> ProcessResult:
                 if (valid_scores := [a.score for a in analyses if isinstance(a.score, int)])
                 else 0.0
             ),
-            "global_status": (
-                "OK"
-                if all(_display_status(a) == "OK" for a in analyses)
-                else "À risque"
-            ),
+            "global_status": "OK" if all(_display_status(a) == "OK" for a in analyses) else "À risque",
         }
 
-        generate_html_report(
-            qra_result=qra_result,
-            output_path=qra_report_path,
-            verbose=verbose,
-        )
-        generate_csv_report(
-            qra_result=qra_result,
-            output_path=qra_report_csv_path,
-            verbose=verbose,
-        )
+        generate_html_report(qra_result=qra_result, output_path=qra_report_path, verbose=verbose)
+        generate_csv_report(qra_result=qra_result, output_path=qra_report_csv_path, verbose=verbose)
 
-
-        # ------------------------------------------------------------
         # 5) Payload final
-        # ------------------------------------------------------------
         payload = {
             "count": len(analyses),
             "input": str(input_path),
             "out_dir": str(out_dir),
-
-            # ✅ legacy timestamped outputs (explicite)
             "output_legacy_csv": str(out_csv),
             "output_legacy_html": str(out_html),
-
-            # ✅ stable report outputs (explicite)
             "output_qra_report_html": str(qra_report_path),
-
-            # ✅ backward compatibility (tests / anciens consommateurs)
+            # backward compatibility
             "output_csv": str(out_csv),
             "output_html": str(out_html),
             "output_qra_report": str(qra_report_path),
@@ -545,7 +501,6 @@ def process(data: Dict[str, Any]) -> ProcessResult:
     except Exception as e:
         log.exception("Erreur inattendue dans process()")
         raise ModuleError(str(e)) from e
-
 
 
 # ============================================================

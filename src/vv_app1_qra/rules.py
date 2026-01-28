@@ -72,7 +72,6 @@ def get_logger(name: str) -> logging.Logger:
 
 log = get_logger(__name__)
 
-
 # ============================================================
 # ⚠️ Exceptions spécifiques au module
 # ============================================================
@@ -161,17 +160,34 @@ def _find_terms(text: str, terms: Sequence[str]) -> List[str]:
     return out
 
 
-def _first_excerpt(text: str, needle: str, radius: int = 45) -> str:
-    """Construit un extrait court autour du premier match."""
-    t = text or ""
-    low = t.lower()
-    n = (needle or "").lower()
-    i = low.find(n)
-    if i < 0:
-        return _compact_ws(t)[: max(0, radius * 2)]
-    start = max(0, i - radius)
-    end = min(len(t), i + len(needle) + radius)
-    return _compact_ws(t[start:end])
+# Heuristic: detect "units"/threshold hints (optional, conservative)
+_NUMERIC_HINT_RE = re.compile(
+    r"(\b\d+(\.\d+)?\b)\s*(ms|s|sec|m|min|h|%|db|dba|°c|c|mm|cm|km/h|mbps|kbps)\b",
+    re.IGNORECASE,
+)
+
+
+def _has_numeric_or_threshold_hint(text: str) -> bool:
+    t = (text or "")
+    if any(x in t for x in ("<=", ">=", "<", ">", "±")):
+        return True
+    return _NUMERIC_HINT_RE.search(t) is not None
+
+
+def _first_excerpt(text: str, needle: str, *, width: int = 120) -> str:
+    """
+    Retourne un extrait centré autour de `needle` si possible.
+    Utilisé pour donner une 'evidence' lisible.
+    """
+    src = (text or "")
+    low = src.lower()
+    nlow = (needle or "").lower()
+    idx = low.find(nlow)
+    if idx < 0:
+        return _compact_ws(src)[:width]
+    start = max(0, idx - width // 3)
+    end = min(len(src), idx + len(needle) + (2 * width // 3))
+    return _compact_ws(src[start:end])
 
 
 def _mk_issue(hit: RuleHit) -> Issue:
@@ -219,7 +235,7 @@ def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
                 category="AMBIGUITY",
                 severity=IssueSeverity.MINOR,
                 message=f"Modal verb '{w}' detected (weak commitment). Prefer 'shall' or measurable phrasing.",
-                field="text",
+                field="requirement_text",
                 evidence=_first_excerpt(text_blob, w),
                 recommendation="Remplacer les modaux faibles (should/may/…) par une formulation normative mesurable (shall + métriques).",
             )
@@ -234,7 +250,7 @@ def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
                 category="AMBIGUITY",
                 severity=IssueSeverity.MINOR,
                 message=f"Ambiguous term '{t}' detected (not measurable).",
-                field="text",
+                field="requirement_text",
                 evidence=_first_excerpt(text_blob, t),
                 recommendation="Remplacer les termes qualitatifs par des critères quantifiés (temps, taux, seuils, tolérances).",
             )
@@ -242,50 +258,50 @@ def _rule_ambiguity(req: Requirement) -> Iterable[RuleHit]:
 
     return hits
 
+
 def _rule_unbounded_scope(req: Requirement) -> Iterable[RuleHit]:
     """
     Détecte des formulations de type 'all conditions' / 'any conditions' :
-    - risque V&V : domaine de validité non borné, souvent non démontrable
+    risque V&V : domaine de validité non borné, souvent non démontrable.
     """
-    text_blob = _compact_ws(" ".join([req.title, req.text, req.acceptance_criteria])).lower()
-
+    blob = _compact_ws(" ".join([req.title or "", req.text or "", req.acceptance_criteria or ""])).lower()
     triggers = ("all conditions", "any conditions", "under all conditions", "in any conditions")
-    if not any(t in text_blob for t in triggers):
+
+    if not any(t in blob for t in triggers):
         return []
 
-    # Même si une métrique existe (ex: 200 ms), le scope 'all conditions' reste à cadrer.
-    # On garde MINOR (pas MAJOR), car c'est souvent une clarification de contexte.
+    needle = "all conditions" if "all conditions" in blob else "any conditions"
+
     return [
         RuleHit(
             rule_id="SCP-001",
             category="SCOPE",
             severity=IssueSeverity.MINOR,
             message="Unbounded scope detected ('all/any conditions'): define operating conditions and assumptions.",
-            field="text",
-            evidence=_first_excerpt(text_blob, "all conditions" if "all conditions" in text_blob else "any conditions"),
-            recommendation="Born­er le domaine de validité (conditions nominales, environnement, charges, hypothèses) et associer des critères vérifiables.",
+            field="requirement_text",
+            evidence=_first_excerpt(req.text or "", needle),
+            recommendation="Born­er le domaine de validité (conditions nominales, environnement, charge, hypothèses) et associer des critères vérifiables.",
         )
     ]
+
 
 def _rule_safety_goal(req: Requirement) -> Iterable[RuleHit]:
     """
     Détecte une exigence très haut niveau du type 'shall be safe' :
-    - pas directement vérifiable
-    - doit être décomposée en exigences safety mesurables / safety case
+    pas directement vérifiable en tant qu'exigence unique.
     """
-    text = _compact_ws(req.text).lower()
-    if "shall be safe" not in text and not (text.startswith("the system shall be safe") or text.endswith("shall be safe.")):
+    text = _compact_ws(req.text or "").lower()
+    if "shall be safe" not in text:
         return []
 
-    # INFO : on ne "pénalise" pas fort, mais on rend visible le risque d'audit.
     return [
         RuleHit(
             rule_id="SAF-001",
             category="SAFETY",
             severity=IssueSeverity.INFO,
             message="High-level safety goal detected: not directly verifiable as a single requirement.",
-            field="text",
-            evidence=_first_excerpt(req.text, "safe"),
+            field="requirement_text",
+            evidence=_first_excerpt(req.text or "", "safe"),
             recommendation="Décomposer en exigences safety testables (hazards, safety goals, contraintes) et fournir les preuves (safety case / traçabilité).",
         )
     ]
@@ -333,16 +349,17 @@ def _rule_acceptance_criteria(req: Requirement) -> Iterable[RuleHit]:
 
     hits: List[RuleHit] = []
 
-    if len(ac) < 15:
+    # AC trop courtes / pauvres
+    if len(ac) < 20:
         hits.append(
             RuleHit(
                 rule_id="AC-001",
                 category="ACCEPTANCE_CRITERIA",
                 severity=IssueSeverity.MINOR,
-                message="Acceptance criteria is too short; likely not actionable/measurable.",
+                message="Acceptance criteria very short; may be insufficiently measurable.",
                 field="acceptance_criteria",
-                evidence=ac,
-                recommendation="Rédiger des critères d’acceptation vérifiables (ex: seuils, étapes, résultats attendus).",
+                evidence=_first_excerpt(ac, ac[: min(len(ac), 10)] if ac else "", width=120),
+                recommendation="Étoffer les critères d’acceptation : métriques, seuils, tolérances, Given/When/Then.",
             )
         )
 
@@ -361,6 +378,20 @@ def _rule_acceptance_criteria(req: Requirement) -> Iterable[RuleHit]:
             )
         )
 
+    # Bonus : si AC ne contiennent aucune hint numérique/seuil (heuristique douce)
+    if not _has_numeric_or_threshold_hint(ac):
+        hits.append(
+            RuleHit(
+                rule_id="AC-003",
+                category="ACCEPTANCE_CRITERIA",
+                severity=IssueSeverity.INFO,
+                message="No numeric/threshold hint detected in acceptance criteria (consider quantifying).",
+                field="acceptance_criteria",
+                evidence=_first_excerpt(ac, ac[: min(len(ac), 12)] if ac else "", width=120),
+                recommendation="Ajouter au moins une valeur/borne (temps, taux, seuil, tolérance) pour rendre l’AC vérifiable.",
+            )
+        )
+
     return hits
 
 
@@ -376,88 +407,6 @@ def compute_score(issues: Sequence[Issue], base: int = 100) -> int:
     for i in issues:
         score -= int(SEVERITY_PENALTY.get(i.severity, 0))
     return max(0, min(100, score))
-
-
-
-# Heuristic: detect "units"/threshold hints (optional, conservative)
-_NUMERIC_HINT_RE = re.compile(
-    r"(\b\d+(\.\d+)?\b)\s*(ms|s|sec|m|min|h|%|db|dba|°c|c|mm|cm|km/h|mbps|kbps)\b",
-    re.IGNORECASE,
-)
-
-def _has_numeric_or_threshold_hint(text: str) -> bool:
-    t = (text or "")
-    if any(x in t for x in ("<=", ">=", "<", ">", "±")):
-        return True
-    return _NUMERIC_HINT_RE.search(t) is not None
-
-
-def _first_excerpt(text: str, needle: str, *, width: int = 120) -> str:
-    """
-    Retourne un extrait centré autour de `needle` si possible.
-    Utilisé pour donner une 'evidence' lisible.
-    """
-    src = (text or "")
-    low = src.lower()
-    nlow = (needle or "").lower()
-    idx = low.find(nlow)
-    if idx < 0:
-        return _compact_ws(src)[:width]
-    start = max(0, idx - width // 3)
-    end = min(len(src), idx + len(needle) + (2 * width // 3))
-    return _compact_ws(src[start:end])
-
-
-def _rule_unbounded_scope(req: Requirement) -> Iterable["RuleHit"]:
-    """
-    Détecte des formulations de type 'all conditions' / 'any conditions' :
-    risque V&V : domaine de validité non borné, souvent non démontrable.
-    """
-    blob = _compact_ws(" ".join([req.title or "", req.text or "", req.acceptance_criteria or ""])).lower()
-    triggers = ("all conditions", "any conditions", "under all conditions", "in any conditions")
-
-    if not any(t in blob for t in triggers):
-        return []
-
-    # Même si une métrique existe, 'all conditions' reste une demande de scope non borné.
-    # On garde MINOR (pas MAJOR) : clarification attendue en audit.
-    needle = "all conditions" if "all conditions" in blob else "any conditions"
-
-    return [
-        RuleHit(
-            rule_id="SCP-001",
-            category="SCOPE",
-            severity=IssueSeverity.MINOR,
-            message="Unbounded scope detected ('all/any conditions'): define operating conditions and assumptions.",
-            field="requirement_text",
-            evidence=_first_excerpt(req.text or "", needle),
-            recommendation="Born­er le domaine de validité (conditions nominales, environnement, charge, hypothèses) et associer des critères vérifiables.",
-        )
-    ]
-
-
-def _rule_safety_goal(req: Requirement) -> Iterable["RuleHit"]:
-    """
-    Détecte une exigence très haut niveau du type 'shall be safe' :
-    pas directement vérifiable en tant qu'exigence unique.
-    """
-    text = _compact_ws(req.text or "").lower()
-
-    # Pattern volontairement strict pour éviter faux positifs
-    if "shall be safe" not in text:
-        return []
-
-    return [
-        RuleHit(
-            rule_id="SAF-001",
-            category="SAFETY",
-            severity=IssueSeverity.INFO,  # comme demandé
-            message="High-level safety goal detected: not directly verifiable as a single requirement.",
-            field="requirement_text",
-            evidence=_first_excerpt(req.text or "", "safe"),
-            recommendation="Décomposer en exigences safety testables (hazards, safety goals, contraintes) et fournir les preuves (safety case / traçabilité).",
-        )
-    ]
 
 
 def analyze_requirement(req: Requirement, *, verbose: bool = False) -> AnalysisResult:

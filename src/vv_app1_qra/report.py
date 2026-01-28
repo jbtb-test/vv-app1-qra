@@ -1,30 +1,66 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ============================================================
-report.py
+vv_app1_qra.report
 ------------------------------------------------------------
-Génération du rapport HTML QRA (APP1)
+Description :
+    Génération du rapport HTML + CSV QRA (APP1).
 
-- HTML statique ouvrable localement
-- Vue synthèse + détails par exigence
-- Suggestions RULES (déterministes) vs IA (LLM) selon le mode
+Rôle :
+    - Produire un HTML statique ouvrable localement (Jinja2)
+    - Produire un CSV synthèse exploitable (offline)
+    - Afficher "RULES vs IA" selon l’état effectif (ENABLE_AI + OPENAI_API_KEY)
+
+Usage :
+    Appelé depuis vv_app1_qra.main :
+      - generate_html_report(...)
+      - generate_csv_report(...)
+
+Notes :
+    - Le rendu se base sur les variables d’environnement au moment du run.
 ============================================================
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-from datetime import datetime
-from typing import Any, Dict
-
+# ============================================================
+# 📦 Imports
+# ============================================================
 import csv
 import logging
 import os
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-log = logging.getLogger(__name__)
+# ============================================================
+# 🧾 Logging (local, autonome)
+# ============================================================
+def get_logger(name: str) -> logging.Logger:
+    """
+    Crée un logger simple et stable (stdout), sans dépendance externe.
+    """
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        fmt = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(fmt)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
 
 
+log = get_logger(__name__)
+
+# ============================================================
+# 🔧 Helpers
+# ============================================================
 def _resolve_template_dir() -> Path:
     base_dir = Path(__file__).resolve().parents[2]  # repo root
     template_dir = base_dir / "templates" / "qra"
@@ -46,23 +82,20 @@ def _compute_ai_enabled() -> bool:
     return enable_ai in {"1", "true", "yes", "on"} and bool(key)
 
 
+# ============================================================
+# 🔧 API principale
+# ============================================================
 def generate_html_report(qra_result: dict, output_path: Path, *, verbose: bool = False) -> Path:
     """
     Génère le rapport HTML QRA.
 
-    Parameters
-    ----------
-    qra_result : dict
-        Résultat structuré du pipeline QRA.
-    output_path : Path
-        Chemin du fichier HTML de sortie.
-    verbose : bool
-        Mode verbeux.
+    Args:
+        qra_result: résultat structuré du pipeline QRA
+        output_path: chemin du fichier HTML de sortie
+        verbose: mode verbeux
 
-    Returns
-    -------
-    Path
-        Chemin du fichier HTML généré.
+    Returns:
+        Path: chemin du fichier HTML généré
     """
     template_dir = _resolve_template_dir()
 
@@ -102,6 +135,17 @@ def generate_html_report(qra_result: dict, output_path: Path, *, verbose: bool =
 
 
 def generate_csv_report(qra_result: Dict[str, Any], output_path: Path, *, verbose: bool = False) -> Path:
+    """
+    Génère le CSV synthèse QRA.
+
+    Args:
+        qra_result: résultat structuré du pipeline QRA
+        output_path: chemin du fichier CSV de sortie
+        verbose: mode verbeux
+
+    Returns:
+        Path: chemin du fichier CSV généré
+    """
     rows = qra_result.get("requirements", []) or []
 
     fieldnames = [
@@ -124,7 +168,7 @@ def generate_csv_report(qra_result: Dict[str, Any], output_path: Path, *, verbos
         w.writeheader()
         for r in rows:
             issues = r.get("issues", []) or []
-            sugs = r.get("ai_suggestions", []) or []  # (nom historique côté pipeline)
+            sugs = r.get("ai_suggestions", []) or []  # nom historique côté pipeline
 
             w.writerow(
                 {

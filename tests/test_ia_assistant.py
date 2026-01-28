@@ -1,18 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ============================================================
 tests.test_ia_assistant
 ------------------------------------------------------------
 Description :
-    Tests unitaires du module IA (APP1 QRA) — Étape 1.9.1
+    Tests unitaires — APP1 QRA — module IA (suggestion-only).
 
 Objectifs :
-    - Garantir que l'app fonctionne sans clé IA
-    - ENABLE_AI=0 -> retourne [] sans dépendance openai
-    - ENABLE_AI=1 mais pas de clé -> fallback [] (contrôlé)
+    - ENABLE_AI absent/0 => IA désactivée
+    - ENABLE_AI=1 sans clé => fallback [] (non bloquant)
+    - ENABLE_AI=1 avec clé => is_ai_enabled True
+
+Usage :
+    pytest -q
 ============================================================
 """
 
-import os
+from __future__ import annotations
 
 from vv_app1_qra.ia_assistant import is_ai_enabled, suggest_improvements
 from vv_app1_qra.models import Issue, IssueSeverity, Requirement

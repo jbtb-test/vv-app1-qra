@@ -1,15 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 ============================================================
-tests/test_models.py
+tests.test_models
 ------------------------------------------------------------
 Description :
-    Tests unitaires pytest pour APP1 QRA — étape 1.7 (models)
+    Tests unitaires pytest — APP1 QRA — modèles (models.py)
 
 Objectifs :
-    - Vérifier création nominale des modèles
-    - Vérifier validation des entrées (ValueError)
-    - Vérifier sérialisation / désérialisation (to_dict/from_dict)
-    - Vérifier conversions Enum strictes
+    - Création nominale
+    - Validation des entrées (ValueError)
+    - Sérialisation / désérialisation (to_dict/from_dict)
+    - Conversions Enum strictes
 
 Usage :
     pytest -q
